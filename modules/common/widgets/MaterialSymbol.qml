@@ -28,7 +28,10 @@ Item {
     implicitWidth: effectiveSize
     implicitHeight: effectiveSize
     
-    property real truncatedFill: fill.toFixed(1)
+    readonly property real clampedFill: Math.max(0, Math.min(1, fill))
+    readonly property real effectiveFill: clampedFill < 0.01 ? 0 : (clampedFill > 0.99 ? 1 : clampedFill)
+    // Material Symbols variable font axis range is 20..48; keeping it in-range avoids distorted fill at small icon sizes.
+    readonly property real effectiveOpsz: Math.max(20, Math.min(48, iconSize))
     
     Text {
         id: iconText
@@ -40,17 +43,17 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         
-        renderType: (!root.useNerd && root.fill !== 0) ? Text.CurveRendering : Text.NativeRendering
+        renderType: Text.NativeRendering
         font {
-            hintingPreference: Font.PreferFullHinting
+            hintingPreference: (root.useNerd && root.hasNerdGlyph) ? Font.PreferFullHinting : Font.PreferNoHinting
             family: (root.useNerd && root.hasNerdGlyph) 
                 ? (Appearance?.font.family.monospace ?? "JetBrainsMono Nerd Font") 
                 : (Appearance?.font.family.iconMaterial ?? "Material Symbols Rounded")
             pixelSize: root.effectiveFontSize
-            weight: (root.useNerd && root.hasNerdGlyph) ? Font.Normal : (Font.Normal + (Font.DemiBold - Font.Normal) * root.truncatedFill)
+            weight: Font.Normal
             variableAxes: (root.useNerd && root.hasNerdGlyph) ? ({}) : ({ 
-                "FILL": root.truncatedFill,
-                "opsz": root.iconSize,
+                "FILL": root.effectiveFill,
+                "opsz": root.effectiveOpsz,
             })
         }
     }
