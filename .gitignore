@@ -33,6 +33,7 @@ prompts/
 mcp.json
 .cursorrules
 .windsurfrules
+.memory/
 
 # WIP documentation (not for distribution)
 docs/*_IMPLEMENTATION.md
@@ -68,6 +69,10 @@ tmp/
 session-*.md
 session-ses_*.md
 /src/
+
+Project Audit and Organization.md
+
+modules/ii/overlay/floatingImage/undefined/
 
 # Credentials and cookies (NEVER commit)
 yt-cookies.txt
