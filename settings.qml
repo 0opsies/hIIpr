@@ -1461,7 +1461,10 @@ ApplicationWindow {
     minimumHeight: 500
     width: 1100
     height: 750
-    color: root.uiReady ? Appearance.m3colors.m3background : "transparent"
+    color: root.uiReady
+        ? (Appearance.inirEverywhere ? Appearance.inir.colLayer0
+          : Appearance.m3colors.m3background)
+        : "transparent"
 
     Shortcut {
         sequences: [StandardKey.Find]
@@ -1553,12 +1556,21 @@ ApplicationWindow {
                 Layout.preferredHeight: 48
                 radius: Appearance.rounding.full
                 color: settingsSearchField.activeFocus
-                    ? Appearance.colors.colLayer1
-                    : Appearance.colors.colLayer0
-                border.width: settingsSearchField.activeFocus ? 2 : 1
+                    ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                      : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                      : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                      : Appearance.colors.colLayer1)
+                    : (Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                      : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                      : Appearance.inirEverywhere ? Appearance.inir.colLayer0
+                      : Appearance.colors.colLayer0)
+                border.width: settingsSearchField.activeFocus ? 2
+                    : (Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth : 1)
                 border.color: settingsSearchField.activeFocus
                     ? Appearance.colors.colPrimary
-                    : Appearance.m3colors.m3outlineVariant
+                    : (Appearance.angelEverywhere ? Appearance.angel.colCardBorder
+                      : Appearance.inirEverywhere ? Appearance.inir.colBorderMuted
+                      : Appearance.m3colors.m3outlineVariant)
 
                 Behavior on color { ColorAnimation { duration: 150 } }
                 Behavior on border.color { ColorAnimation { duration: 150 } }
@@ -1788,8 +1800,18 @@ ApplicationWindow {
                 id: contentContainer
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: Appearance.m3colors.m3surfaceContainerLow
-                radius: Appearance.rounding.windowRounding - root.contentPadding
+                color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
+                     : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                     : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                     : Appearance.m3colors.m3surfaceContainerLow
+                radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+                      : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
+                      : Appearance.rounding.windowRounding - root.contentPadding
+                border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
+                            : Appearance.inirEverywhere ? 1 : 0
+                border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
+                            : Appearance.inirEverywhere ? Appearance.inir.colBorderSubtle
+                            : "transparent"
 
                 Item {
                     id: pagesStack
@@ -1880,15 +1902,20 @@ ApplicationWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: 8
-                        radius: Appearance.rounding.normal
-                        color: Appearance.auroraEverywhere ? Appearance.colors.colLayer1Base
+                        radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
+                             : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
+                             : Appearance.rounding.normal
+                        color: Appearance.angelEverywhere ? Appearance.angel.colGlassPopup
+                            : Appearance.auroraEverywhere ? Appearance.aurora.colPopupSurface
                             : Appearance.inirEverywhere ? Appearance.inir.colLayer2
                             : Appearance.colors.colLayer1
-                        border.width: 1
-                        border.color: Appearance.inirEverywhere ? Appearance.inir.colBorder
+                        border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
+                                    : Appearance.inirEverywhere ? 1 : 1
+                        border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
+                            : Appearance.inirEverywhere ? Appearance.inir.colBorder
                             : Appearance.m3colors.m3outlineVariant
 
-                        layer.enabled: Appearance.effectsEnabled
+                        layer.enabled: Appearance.effectsEnabled && !Appearance.auroraEverywhere
                         layer.effect: DropShadow {
                             color: Qt.rgba(0, 0, 0, 0.3)
                             radius: 12
@@ -1938,10 +1965,20 @@ ApplicationWindow {
 
                                 width: resultsListView.width
                                 implicitHeight: 52
-                                buttonRadius: Appearance.rounding.small
+                                buttonRadius: Appearance.angelEverywhere ? Appearance.angel.roundingSmall
+                                            : Appearance.inirEverywhere ? Appearance.inir.roundingSmall
+                                            : Appearance.rounding.small
 
-                                colBackground: ListView.isCurrentItem ? Appearance.colors.colPrimaryContainer : "transparent"
-                                colBackgroundHover: Appearance.colors.colLayer2
+                                colBackground: ListView.isCurrentItem
+                                    ? (Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                                      : Appearance.inirEverywhere ? Appearance.inir.colLayer1
+                                      : Appearance.auroraEverywhere ? Appearance.aurora.colElevatedSurface
+                                      : Appearance.colors.colPrimaryContainer)
+                                    : "transparent"
+                                colBackgroundHover: Appearance.angelEverywhere ? Appearance.angel.colGlassCardHover
+                                                  : Appearance.inirEverywhere ? Appearance.inir.colLayer1Hover
+                                                  : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                                                  : Appearance.colors.colLayer2
 
                                 Keys.forwardTo: [resultsListView]
                                 onClicked: root.openSearchResult(modelData)
@@ -2045,7 +2082,10 @@ ApplicationWindow {
                     width: noResultsRow.implicitWidth + 24
                     height: 36
                     radius: Appearance.rounding.full
-                    color: Appearance.colors.colLayer1
+                    color: Appearance.angelEverywhere ? Appearance.angel.colGlassPopup
+                         : Appearance.auroraEverywhere ? Appearance.aurora.colPopupSurface
+                         : Appearance.inirEverywhere ? Appearance.inir.colLayer2
+                         : Appearance.colors.colLayer1
                     z: 100
 
                     RowLayout {

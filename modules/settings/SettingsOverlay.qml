@@ -1039,8 +1039,7 @@ Scope {
                             radius: Appearance.angelEverywhere ? Appearance.angel.roundingNormal
                                  : Appearance.inirEverywhere ? Appearance.inir.roundingNormal
                                  : Appearance.rounding.normal
-                            color: Appearance.angelEverywhere ? Appearance.angel.colGlassCard
-                                 : Appearance.auroraEverywhere ? Appearance.aurora.colSubSurface
+                            color: Appearance.auroraEverywhere ? "transparent"
                                  : Appearance.inirEverywhere ? Appearance.inir.colLayer1
                                  : Appearance.m3colors.m3surfaceContainerLow
                             border.width: Appearance.angelEverywhere ? Appearance.angel.cardBorderWidth
@@ -1048,6 +1047,22 @@ Scope {
                             border.color: Appearance.angelEverywhere ? Appearance.angel.colCardBorder
                                         : Appearance.inirEverywhere ? Appearance.inir.colBorderSubtle : "transparent"
                             clip: true
+
+                            // Glass background for aurora/angel wallpaper blur in content area
+                            GlassBackground {
+                                anchors.fill: parent
+                                z: -1
+                                visible: Appearance.auroraEverywhere && !Appearance.inirEverywhere
+                                screenX: settingsCard.x + overlayContentContainer.x + 16
+                                screenY: settingsCard.y + overlayContentContainer.y + 16
+                                screenWidth: settingsPanel.width
+                                screenHeight: settingsPanel.height
+                                fallbackColor: "transparent"
+                                auroraTransparency: Appearance.angelEverywhere
+                                    ? Appearance.angel.cardTransparentize
+                                    : Appearance.aurora.subSurfaceTransparentize
+                                radius: parent.radius
+                            }
 
                             // Loading indicator
                             CircularProgress {
