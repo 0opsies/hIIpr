@@ -3,9 +3,42 @@
 getdate() {
     date '+%Y-%m-%d_%H.%M.%S'
 }
-getaudiooutput() {
-    pactl list sources | grep 'Name' | grep 'monitor' | cut -d ' ' -f2 | head -n 1
+
+is_truthy() {
+    case "$1" in
+        1|true|TRUE|yes|YES|on|ON) return 0 ;;
+        *) return 1 ;;
+    esac
 }
+
+is_vaapi_codec() {
+    [[ "$1" == "h264_vaapi" || "$1" == "hevc_vaapi" || "$1" == "vp9_vaapi" || "$1" == "av1_vaapi" ]]
+}
+
+getaudiooutput() {
+    local default_sink
+    default_sink="$(pactl get-default-sink 2>/dev/null)"
+    if [[ -n "$default_sink" && "$default_sink" != "null" ]]; then
+        printf '%s.monitor\n' "$default_sink"
+        return
+    fi
+
+    pactl info 2>/dev/null | sed -n 's/^Default Sink: //p' | head -n 1 | awk 'NF { print $0 ".monitor"; found=1; exit } END { if (!found) exit 1 }'
+    if [[ $? -eq 0 ]]; then
+        return
+    fi
+
+    pactl list sources short 2>/dev/null | awk '/monitor/ { print $2; exit }'
+}
+
+resolve_audio_device() {
+    if [[ -n "$AUDIO_SOURCE" && "$AUDIO_SOURCE" != "null" ]]; then
+        printf '%s\n' "$AUDIO_SOURCE"
+        return
+    fi
+    getaudiooutput
+}
+
 getactivemonitor() {
     if command -v niri >/dev/null 2>&1 && niri msg focused-output >/dev/null 2>&1; then
         niri msg focused-output | head -n 1 | sed -n 's/.*(\(.*\))/\1/p'
@@ -14,27 +47,186 @@ getactivemonitor() {
     fi
 }
 
+has_ffmpeg_encoder() {
+    local encoder="$1"
+    ffmpeg -hide_banner -encoders 2>/dev/null | awk '{print $2}' | grep -Fxq "$encoder"
+}
+
+detect_hw_video_codec() {
+    if [[ -n "$HARDWARE_DEVICE" && -c "$HARDWARE_DEVICE" ]]; then
+        if has_ffmpeg_encoder h264_vaapi; then
+            printf '%s\n' 'h264_vaapi'
+            return
+        fi
+        if has_ffmpeg_encoder hevc_vaapi; then
+            printf '%s\n' 'hevc_vaapi'
+            return
+        fi
+    fi
+    printf '%s\n' 'libx264'
+}
+
+is_default_recorder_value() {
+    local value="$1"
+    local default_value="$2"
+    [[ -z "$value" || "$value" == "null" || "$value" == "$default_value" ]]
+}
+
+build_common_args() {
+    common_args=(
+        -f "$output_file"
+        -t
+        -r "$FPS"
+    )
+
+    if is_vaapi_codec "$VIDEO_CODEC"; then
+        common_args+=(
+            -c "$VIDEO_CODEC"
+        )
+        [[ -n "$HARDWARE_DEVICE" ]] && common_args+=( -d "$HARDWARE_DEVICE" )
+        [[ -n "$VAAPI_FILTER" ]] && common_args+=( -F "$VAAPI_FILTER" )
+        if [[ -n "$VIDEO_BITRATE_KBPS" ]]; then
+            common_args+=( -p "b=${VIDEO_BITRATE_KBPS}k" )
+        fi
+    else
+        common_args+=( --pixel-format "$PIXEL_FORMAT" )
+        common_args+=( -c "$VIDEO_CODEC" )
+        if [[ -n "$VIDEO_BITRATE_KBPS" ]]; then
+            common_args+=( -p "b=${VIDEO_BITRATE_KBPS}k" )
+        fi
+        if [[ "$VIDEO_CODEC" == libx264* || "$VIDEO_CODEC" == libx265* ]]; then
+            [[ -n "$VIDEO_PRESET" ]] && common_args+=( -p "preset=${VIDEO_PRESET}" )
+            [[ -n "$VIDEO_CRF" ]] && common_args+=( -p "crf=${VIDEO_CRF}" )
+        fi
+    fi
+}
+
+build_audio_args() {
+    audio_args=()
+    if [[ $SOUND_FLAG -ne 1 ]]; then
+        return
+    fi
+
+    local audio_device
+    audio_device="$(resolve_audio_device)"
+    if [[ -n "$audio_device" ]]; then
+        audio_args+=( --audio="$audio_device" )
+    else
+        audio_args+=( --audio )
+    fi
+
+    [[ -n "$AUDIO_BACKEND" ]] && audio_args+=( --audio-backend="$AUDIO_BACKEND" )
+    [[ -n "$AUDIO_CODEC" ]] && audio_args+=( -C "$AUDIO_CODEC" )
+    [[ -n "$AUDIO_BITRATE_KBPS" ]] && audio_args+=( -P "b=${AUDIO_BITRATE_KBPS}k" )
+    audio_args+=( -R "$AUDIO_SAMPLE_RATE" )
+}
+
+build_safe_fallback_common_args() {
+    fallback_common_args=(
+        --pixel-format yuv420p
+        -f "$output_file"
+        -t
+        -r "$FPS"
+    )
+}
+
+start_recording_command() {
+    local geometry="$1"
+    local output_name="$2"
+    local -a preferred_cmd=(wf-recorder)
+    local -a fallback_cmd=(wf-recorder)
+
+    if [[ -n "$geometry" ]]; then
+        preferred_cmd+=(--geometry "$geometry")
+        fallback_cmd+=(--geometry "$geometry")
+    else
+        preferred_cmd+=(-o "$(getactivemonitor)")
+        fallback_cmd+=(-o "$(getactivemonitor)")
+    fi
+
+    preferred_cmd+=("${common_args[@]}" "${audio_args[@]}")
+    fallback_cmd+=("${fallback_common_args[@]}")
+    if [[ $SOUND_FLAG -eq 1 ]]; then
+        local fallback_audio_device
+        fallback_audio_device="$(resolve_audio_device)"
+        if [[ -n "$fallback_audio_device" ]]; then
+            fallback_cmd+=(--audio="$fallback_audio_device")
+        else
+            fallback_cmd+=(--audio)
+        fi
+        [[ -n "$AUDIO_BACKEND" ]] && fallback_cmd+=(--audio-backend="$AUDIO_BACKEND")
+        [[ -n "$AUDIO_CODEC" ]] && fallback_cmd+=(-C "$AUDIO_CODEC")
+        [[ -n "$AUDIO_BITRATE_KBPS" ]] && fallback_cmd+=(-P "b=${AUDIO_BITRATE_KBPS}k")
+        fallback_cmd+=(-R "$AUDIO_SAMPLE_RATE")
+    fi
+
+    notify-send "Starting recording" "$output_name" -a 'Recorder' & disown
+    if ! "${preferred_cmd[@]}"; then
+        if is_truthy "$ENABLE_FALLBACK"; then
+            notify-send "Recording fallback" "Preferred encoder failed, retrying with safe mode" -a 'Recorder' & disown
+            "${fallback_cmd[@]}"
+        else
+            return 1
+        fi
+    fi
+}
+
 # Try to get save path from config, fallback to XDG Videos
 CONFIG_FILE="$HOME/.config/illogical-impulse/config.json"
 SAVE_PATH=""
-VIDEO_CODEC="libx264"
+QUALITY_PRESET="balanced"
+VIDEO_CODEC=""
 AUDIO_CODEC="aac"
+ACCELERATION_MODE="auto"
+HARDWARE_DEVICE="/dev/dri/renderD128"
 FPS="60"
 VIDEO_BITRATE_KBPS="12000"
 AUDIO_BITRATE_KBPS="192"
+AUDIO_SOURCE=""
+AUDIO_BACKEND=""
+AUDIO_SAMPLE_RATE="48000"
 PIXEL_FORMAT="yuv420p"
 VIDEO_PRESET="veryfast"
 VIDEO_CRF="21"
+VAAPI_FILTER="scale_vaapi=format=nv12:out_range=full"
+ENABLE_FALLBACK="true"
 if [[ -f "$CONFIG_FILE" ]] && command -v jq >/dev/null 2>&1; then
     SAVE_PATH=$(jq -r '.screenRecord.savePath // empty' "$CONFIG_FILE" 2>/dev/null)
-    VIDEO_CODEC=$(jq -r '.screenRecord.videoCodec // "libx264"' "$CONFIG_FILE" 2>/dev/null)
+    QUALITY_PRESET=$(jq -r '.screenRecord.qualityPreset // "balanced"' "$CONFIG_FILE" 2>/dev/null)
+    VIDEO_CODEC=$(jq -r '.screenRecord.videoCodec // empty' "$CONFIG_FILE" 2>/dev/null)
     AUDIO_CODEC=$(jq -r '.screenRecord.audioCodec // "aac"' "$CONFIG_FILE" 2>/dev/null)
+    ACCELERATION_MODE=$(jq -r '.screenRecord.accelerationMode // "auto"' "$CONFIG_FILE" 2>/dev/null)
+    HARDWARE_DEVICE=$(jq -r '.screenRecord.hardwareDevice // "/dev/dri/renderD128"' "$CONFIG_FILE" 2>/dev/null)
     FPS=$(jq -r '.screenRecord.fps // 60' "$CONFIG_FILE" 2>/dev/null)
     VIDEO_BITRATE_KBPS=$(jq -r '.screenRecord.videoBitrateKbps // 12000' "$CONFIG_FILE" 2>/dev/null)
     AUDIO_BITRATE_KBPS=$(jq -r '.screenRecord.audioBitrateKbps // 192' "$CONFIG_FILE" 2>/dev/null)
+    AUDIO_SOURCE=$(jq -r '.screenRecord.audioSource // empty' "$CONFIG_FILE" 2>/dev/null)
+    AUDIO_BACKEND=$(jq -r '.screenRecord.audioBackend // empty' "$CONFIG_FILE" 2>/dev/null)
+    AUDIO_SAMPLE_RATE=$(jq -r '.screenRecord.audioSampleRate // 48000' "$CONFIG_FILE" 2>/dev/null)
     PIXEL_FORMAT=$(jq -r '.screenRecord.pixelFormat // "yuv420p"' "$CONFIG_FILE" 2>/dev/null)
     VIDEO_PRESET=$(jq -r '.screenRecord.preset // "veryfast"' "$CONFIG_FILE" 2>/dev/null)
     VIDEO_CRF=$(jq -r '.screenRecord.crf // 21' "$CONFIG_FILE" 2>/dev/null)
+    VAAPI_FILTER=$(jq -r '.screenRecord.vaapiFilter // "scale_vaapi=format=nv12:out_range=full"' "$CONFIG_FILE" 2>/dev/null)
+    ENABLE_FALLBACK=$(jq -r '.screenRecord.enableFallback // true' "$CONFIG_FILE" 2>/dev/null)
+fi
+
+if [[ "$ACCELERATION_MODE" == "gpu" ]]; then
+    if is_default_recorder_value "$VIDEO_CODEC" "libx264"; then
+        VIDEO_CODEC="$(detect_hw_video_codec)"
+    fi
+elif [[ "$ACCELERATION_MODE" == "software" ]]; then
+    if is_default_recorder_value "$VIDEO_CODEC" "libx264" || is_vaapi_codec "$VIDEO_CODEC"; then
+        VIDEO_CODEC="libx264"
+    fi
+elif is_default_recorder_value "$VIDEO_CODEC" "libx264"; then
+    VIDEO_CODEC="$(detect_hw_video_codec)"
+fi
+
+if is_vaapi_codec "$VIDEO_CODEC"; then
+    PIXEL_FORMAT="yuv420p"
+    if is_default_recorder_value "$VIDEO_BITRATE_KBPS" "12000"; then
+        VIDEO_BITRATE_KBPS="18000"
+    fi
 fi
 
 # Fallback to XDG Videos if config path is empty
@@ -76,47 +268,12 @@ if pgrep wf-recorder > /dev/null; then
 else
     timestamp="$(getdate)"
     output_file="./recording_${timestamp}.mp4"
-    common_args=(
-        -f "$output_file"
-        -t
-        --pixel-format "$PIXEL_FORMAT"
-        --codec "$VIDEO_CODEC"
-        --framerate "$FPS"
-        --codec-param "b=${VIDEO_BITRATE_KBPS}k"
-    )
-
-    case "$VIDEO_CODEC" in
-        libx264|libx265)
-            common_args+=(
-                --codec-param "preset=$VIDEO_PRESET"
-                --codec-param "crf=$VIDEO_CRF"
-            )
-            ;;
-    esac
-
-    audio_args=()
-    if [[ $SOUND_FLAG -eq 1 ]]; then
-        audio_device="$(getaudiooutput)"
-        if [[ -n "$audio_device" ]]; then
-            audio_args=(
-                --audio="$audio_device"
-                --audio-codec "$AUDIO_CODEC"
-                --audio-codec-param "b=${AUDIO_BITRATE_KBPS}k"
-                --sample-rate 48000
-            )
-        else
-            audio_args=(
-                --audio
-                --audio-codec "$AUDIO_CODEC"
-                --audio-codec-param "b=${AUDIO_BITRATE_KBPS}k"
-                --sample-rate 48000
-            )
-        fi
-    fi
-
+    output_name="recording_${timestamp}.mp4"
+    build_common_args
+    build_audio_args
+    build_safe_fallback_common_args
     if [[ $FULLSCREEN_FLAG -eq 1 ]]; then
-        notify-send "Starting recording" "recording_${timestamp}.mp4" -a 'Recorder' & disown
-        wf-recorder -o "$(getactivemonitor)" "${common_args[@]}" "${audio_args[@]}"
+        start_recording_command "" "$output_name"
     else
         # If a manual region was provided via --region, use it; otherwise run slurp as before.
         if [[ -n "$MANUAL_REGION" ]]; then
@@ -128,7 +285,6 @@ else
             fi
         fi
 
-        notify-send "Starting recording" "recording_${timestamp}.mp4" -a 'Recorder' & disown
-        wf-recorder --geometry "$region" "${common_args[@]}" "${audio_args[@]}"
+        start_recording_command "$region" "$output_name"
     fi
 fi

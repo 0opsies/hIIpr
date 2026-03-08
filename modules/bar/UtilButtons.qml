@@ -46,28 +46,7 @@ Item {
                 implicitWidth: screenRecordButton.implicitWidth
                 implicitHeight: screenRecordButton.implicitHeight
 
-                // Check if wf-recorder is actually running
-                property bool isRecording: false
-
-                Timer {
-                    interval: 1000
-                    running: true
-                    repeat: true
-                    onTriggered: {
-                        // Check if wf-recorder process exists using pgrep
-                        checkProcess.running = true
-                    }
-                }
-
-                Process {
-                    id: checkProcess
-                    command: ["pgrep", "-x", "wf-recorder"]
-                    running: false
-
-                    onExited: (exitCode, exitStatus) => {
-                        recordButtonWrapper.isRecording = (exitCode === 0)
-                    }
-                }
+                property bool isRecording: RecorderStatus.isRecording
 
                 CircleUtilButton {
                     id: screenRecordButton
