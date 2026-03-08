@@ -216,6 +216,13 @@ Item {
                 onNewWindowRequested: function(request) {
                     webView.url = request.requestedUrl
                 }
+
+                // Suppress noisy WebEngine JS warnings (font preload, CORS, etc.)
+                // that pollute quickshell logs. Errors still pass through.
+                onJavaScriptConsoleMessage: function(level, message, lineNumber, sourceID) {
+                    if (level === WebEngineView.ErrorMessageLevel)
+                        console.error("[WebApp:" + root.pluginId + "]", message)
+                }
             }
 
             // Deferred URL load — waits for profile disk backend to initialize.
@@ -272,8 +279,6 @@ Item {
             script.worldId = 0         // MainWorld
             script.runOnSubframes = false
             webView.userScripts.insert(script)
-            console.log("[Plugins]", root.pluginId, "installed userscript", i,
-                "(" + code.length + " bytes) [DocumentCreation/MainWorld]")
         }
     }
 

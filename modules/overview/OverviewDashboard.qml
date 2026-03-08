@@ -110,7 +110,7 @@ Item {
     // ── Adaptive colors from album art ──
     ColorQuantizer {
         id: colorQuantizer
-        source: root.displayedArtFilePath
+        source: root.downloaded ? root.displayedArtFilePath : ""
         depth: 0; rescaleSize: 1
     }
     property color artDominantColor: ColorUtils.mix(
@@ -622,10 +622,10 @@ Item {
                 // Blurred album art overlay
                 Image {
                     anchors.fill: parent
-                    source: root.displayedArtFilePath
+                    source: root.downloaded ? root.displayedArtFilePath : ""
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
-                    visible: root.displayedArtFilePath !== ""
+                    visible: root.displayedArtFilePath !== "" && status === Image.Ready
                     opacity: root.inirStyle ? 0.15 : (root.auroraStyle ? 0.25 : 0.4)
                     layer.enabled: Appearance.effectsEnabled
                     layer.effect: MultiEffect { blurEnabled: true; blur: 0.4; blurMax: 40; saturation: 0.3 }
@@ -671,7 +671,7 @@ Item {
 
                             Image {
                                 anchors.fill: parent
-                                source: root.displayedArtFilePath
+                                source: root.downloaded ? root.displayedArtFilePath : ""
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
                                 sourceSize { width: 192; height: 192 }

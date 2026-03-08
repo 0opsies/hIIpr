@@ -592,6 +592,13 @@ Scope {
                 target: settingsCard
             }
 
+            // ── Corner fill for solid styles (rounded corners reveal wallpaper) ──
+            Rectangle {
+                anchors.fill: settingsCard
+                color: settingsCard.color
+                visible: !Appearance.auroraEverywhere
+            }
+
             // ── Floating settings card ──
             Rectangle {
                 id: settingsCard

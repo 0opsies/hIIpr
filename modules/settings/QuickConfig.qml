@@ -868,7 +868,7 @@ ContentPage {
                                             anchors.centerIn: parent
                                             text: "check"
                                             font.pixelSize: Appearance.font.pixelSize.small
-                                            color: Appearance.inirEverywhere ? Appearance.inir.colOnAccent : Appearance.colors.colOnPrimary
+                                            color: Appearance.inirEverywhere ? Appearance.inir.colOnPrimary : Appearance.colors.colOnPrimary
                                         }
                                     }
 
@@ -1100,7 +1100,7 @@ ContentPage {
                                                 anchors.centerIn: parent
                                                 text: "check"
                                                 font.pixelSize: Appearance.font.pixelSize.small
-                                                color: Appearance.inirEverywhere ? Appearance.inir.colOnAccent : Appearance.colors.colOnPrimary
+                                                color: Appearance.inirEverywhere ? Appearance.inir.colOnPrimary : Appearance.colors.colOnPrimary
                                             }
                                         }
 

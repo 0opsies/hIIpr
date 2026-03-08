@@ -31,7 +31,7 @@ Rectangle {
             text: "info"
             iconSize: Appearance.font.pixelSize.huge
             color: Appearance.angelEverywhere ? Appearance.angel.colPrimary
-                 : Appearance.inirEverywhere ? Appearance.inir.accent : Appearance.colors.colPrimary
+                 : Appearance.inirEverywhere ? Appearance.inir.colAccent : Appearance.colors.colPrimary
         }
 
         ColumnLayout {
