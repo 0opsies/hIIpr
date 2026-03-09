@@ -114,10 +114,10 @@ Scope {
                     anchors.leftMargin: root.position === "right" ? hideOffsetV : 0
                     anchors.rightMargin: root.isLeft ? hideOffsetV : 0
 
-                    Behavior on anchors.topMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.bottomMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.leftMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
-                    Behavior on anchors.rightMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
+                    Behavior on anchors.topMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                    Behavior on anchors.bottomMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                    Behavior on anchors.leftMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
+                    Behavior on anchors.rightMargin { animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve } }
 
                     Item {
                         id: dockHoverRegion
@@ -218,9 +218,11 @@ Scope {
                                     source: dockVisualBackground.wallpaperUrl
                                     fillMode: Image.PreserveAspectCrop
                                     cache: true
+                                    sourceSize.width: Math.ceil((dockRoot.screen?.width ?? 1920) / 4)
+                                    sourceSize.height: Math.ceil((dockRoot.screen?.height ?? 1080) / 4)
                                     asynchronous: true
 
-                                    layer.enabled: Appearance.effectsEnabled && !dockVisualBackground.gameModeMinimal
+                                    layer.enabled: Appearance.effectsEnabled && dockVisualBackground.auroraEverywhere && !dockVisualBackground.inirEverywhere && !dockVisualBackground.gameModeMinimal
                                     layer.effect: MultiEffect {
                                         source: dockBlurredWallpaper
                                         anchors.fill: source

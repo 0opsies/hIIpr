@@ -603,7 +603,9 @@ Item {
             source: bg.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true; asynchronous: true
-            layer.enabled: Appearance.effectsEnabled
+            sourceSize.width: Math.ceil((root.screenWidth  ?? 1920) / 4)
+            sourceSize.height: Math.ceil((root.screenHeight ?? 1080) / 4)
+            layer.enabled: Appearance.effectsEnabled && bg.auroraEverywhere && !bg.inirEverywhere
             layer.effect: MultiEffect {
                 source: bgBlurWallpaper
                 anchors.fill: source

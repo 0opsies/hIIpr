@@ -219,6 +219,8 @@ Item {
             source: root.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: Math.ceil(root.screenWidth / 4)
+            sourceSize.height: Math.ceil(root.screenHeight / 4)
             asynchronous: true
 
             layer.enabled: Appearance.effectsEnabled
@@ -321,9 +323,11 @@ Item {
                     source: root.wallpaperUrl
                     fillMode: Image.PreserveAspectCrop
                     cache: true
+                    sourceSize.width: Math.ceil(root.screenWidth / 4)
+                    sourceSize.height: Math.ceil(root.screenHeight / 4)
                     asynchronous: true
 
-                    layer.enabled: Appearance.effectsEnabled
+                    layer.enabled: Appearance.effectsEnabled && (Appearance.auroraEverywhere || Appearance.angelEverywhere) && !Appearance.inirEverywhere
                     layer.effect: MultiEffect {
                         saturation: root.angelStyle ? Appearance.angel.blurSaturation : 0.2
                         blurEnabled: Appearance.effectsEnabled
@@ -807,7 +811,7 @@ Item {
                                     color: root.mediaAccent
                                     Behavior on color {
                                         enabled: Appearance.animationsEnabled
-                                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                        animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                     }
                                 }
                             }
@@ -1256,7 +1260,7 @@ Item {
 
         Behavior on color {
             enabled: Appearance.animationsEnabled
-            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+            animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
 
         ColumnLayout {
@@ -1280,7 +1284,7 @@ Item {
                 }
                 Behavior on color {
                     enabled: Appearance.animationsEnabled
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
             }
 
@@ -1295,7 +1299,7 @@ Item {
 
                 Behavior on color {
                     enabled: Appearance.animationsEnabled
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
             }
         }

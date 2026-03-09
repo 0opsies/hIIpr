@@ -58,7 +58,7 @@ Item { // Player instance - Old style design
             text: iconName
 
             Behavior on color {
-                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
         }
     }
@@ -172,9 +172,11 @@ Item { // Player instance - Old style design
             source: Wallpapers.effectiveWallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: background.width
+            sourceSize.height: background.height
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && Appearance.auroraEverywhere && !Appearance.inirEverywhere
             layer.effect: MultiEffect {
                 source: auroraWallpaper
                 anchors.fill: source
@@ -203,7 +205,7 @@ Item { // Player instance - Old style design
             sourceSize.width: background.width
             sourceSize.height: background.height
             fillMode: Image.PreserveAspectCrop
-            cache: false
+            cache: true
             antialiasing: true
             asynchronous: true
             opacity: Appearance.inirEverywhere ? 0.5 : 0.3
@@ -239,7 +241,7 @@ Item { // Player instance - Old style design
 
             Behavior on opacity {
                 enabled: Appearance.animationsEnabled
-                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
         }
 
@@ -271,7 +273,7 @@ Item { // Player instance - Old style design
 
                     source: root.displayedArtFilePath
                     fillMode: Image.PreserveAspectCrop
-                    cache: false
+                    cache: true
                     antialiasing: true
 
                     width: size
@@ -429,7 +431,7 @@ Item { // Player instance - Old style design
                             text: root.player?.isPlaying ? "pause" : "play_arrow"
 
                             Behavior on color {
-                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                         }
                     }

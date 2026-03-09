@@ -168,6 +168,8 @@ Scope {
                 fillMode: Image.PreserveAspectCrop
                 visible: false
                 cache: true
+                sourceSize.width: 480
+                sourceSize.height: 270
                 asynchronous: true
             }
 
@@ -201,7 +203,7 @@ Scope {
 
                 Behavior on color {
                     enabled: Appearance.animationsEnabled
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
                 Behavior on opacity {
                     enabled: Appearance.animationsEnabled
@@ -252,11 +254,11 @@ Scope {
 
             Behavior on color {
                 enabled: Appearance.animationsEnabled
-                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
             Behavior on border.color {
                 enabled: Appearance.animationsEnabled
-                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
             }
 
             scale: root.isOpen ? 1.0 : 0.95
@@ -552,7 +554,7 @@ Scope {
 
                                 Behavior on color {
                                     enabled: Appearance.animationsEnabled
-                                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                                 }
                             }
 
@@ -1299,7 +1301,7 @@ Scope {
 
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
-                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                         }
 
@@ -1334,11 +1336,11 @@ Scope {
 
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
-                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                             Behavior on opacity {
                                 enabled: Appearance.animationsEnabled
-                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                                animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                         }
 
@@ -1400,7 +1402,7 @@ Scope {
 
                             Behavior on color {
                                 enabled: Appearance.animationsEnabled
-                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                                animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                             }
                         }
 

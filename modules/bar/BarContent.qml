@@ -269,9 +269,11 @@ Item { // Bar content region
             source: root.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: Math.ceil((root.screen?.width ?? 1920) / 4)
+            sourceSize.height: Math.ceil((root.screen?.height ?? 1080) / 4)
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && barBackground.auroraEverywhere && !root.inirEverywhere
             layer.effect: MultiEffect {
                 source: blurredWallpaper
                 anchors.fill: source
@@ -546,7 +548,7 @@ Item { // Bar content region
                 property color colText: toggled ? Appearance.m3colors.m3onSecondaryContainer : Appearance.colors.colOnLayer0
 
                 Behavior on colText {
-                    animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    animation: ColorAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                 }
 
                 onPressed: {
@@ -564,7 +566,7 @@ Item { // Bar content region
                         Layout.fillHeight: true
                         Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "volume_off"
@@ -577,7 +579,7 @@ Item { // Bar content region
                         Layout.fillHeight: true
                         Layout.rightMargin: reveal ? indicatorsRowLayout.realSpacing : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         MaterialSymbol {
                             text: "mic_off"
@@ -597,7 +599,7 @@ Item { // Bar content region
                         implicitHeight: reveal ? notificationUnreadCount.implicitHeight : 0
                         implicitWidth: reveal ? notificationUnreadCount.implicitWidth : 0
                         Behavior on Layout.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         NotificationUnreadCount {
                             id: notificationUnreadCount

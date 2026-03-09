@@ -104,10 +104,10 @@ Scope {
                             rightMargin: 0
                         }
                         Behavior on anchors.leftMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
                         Behavior on anchors.rightMargin {
-                            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
                         }
 
                         states: State {
@@ -253,9 +253,11 @@ Scope {
                                             source: Wallpapers.effectiveWallpaperUrl
                                             fillMode: Image.PreserveAspectCrop
                                             cache: true
+                                            sourceSize.width: Math.ceil((barRoot.screen?.width ?? 1920) / 4)
+                                            sourceSize.height: Math.ceil((barRoot.screen?.height ?? 1080) / 4)
                                             asynchronous: true
 
-                                            layer.enabled: Appearance.effectsEnabled
+                                            layer.enabled: Appearance.effectsEnabled && Appearance.auroraEverywhere
                                             layer.effect: MultiEffect {
                                                 source: blurImg
                                                 anchors.fill: source

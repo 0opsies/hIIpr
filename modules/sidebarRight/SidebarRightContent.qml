@@ -150,9 +150,11 @@ Item {
             source: sidebarRightBackground.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: Math.ceil((root.screenWidth ?? 1920) / 4)
+            sourceSize.height: Math.ceil((root.screenHeight ?? 1080) / 4)
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && sidebarRightBackground.auroraEverywhere && !sidebarRightBackground.inirEverywhere
             layer.effect: MultiEffect {
                 source: sidebarRightBlurredWallpaper
                 anchors.fill: source

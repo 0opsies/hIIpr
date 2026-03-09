@@ -87,9 +87,11 @@ Item {
             source: root.wallpaperUrl
             fillMode: Image.PreserveAspectCrop
             cache: true
+            sourceSize.width: Math.ceil(root.screenWidth / 4)
+            sourceSize.height: Math.ceil(root.screenHeight / 4)
             asynchronous: true
 
-            layer.enabled: Appearance.effectsEnabled
+            layer.enabled: Appearance.effectsEnabled && root.auroraEverywhere && !root.inirEverywhere
             layer.effect: MultiEffect {
                 source: blurredWallpaper
                 anchors.fill: source
