@@ -52,9 +52,10 @@ Rectangle {
         y: -root.screenY
         width: root.screenWidth
         height: root.screenHeight
-        // Avoid showing a stale cached pixmap while the new source is still loading.
+        // Keep source always loaded so QPixmapCache retains the decoded pixmap.
+        // This avoids a re-decode freeze when switching back to aurora/angel style.
         visible: (root.auroraEverywhere || root.angelEverywhere) && !root.inirEverywhere && status === Image.Ready
-        source: ((root.auroraEverywhere || root.angelEverywhere) && !root.inirEverywhere) ? root.wallpaperUrl : ""
+        source: root.wallpaperUrl
         fillMode: Image.PreserveAspectCrop
         cache: true
         sourceSize.width: root.screenWidth

@@ -52,9 +52,11 @@ Rectangle {
         y: -root.screenY
         width: root.screenWidth
         height: root.screenHeight
-        // Avoid showing a stale cached pixmap while the new source is still loading.
+        // Keep source always loaded so QPixmapCache retains the decoded pixmap.
+        // This avoids a re-decode freeze when switching back to aurora/angel style.
+        // visible + layer.enabled gates prevent rendering and FBO allocation.
         visible: root.auroraEverywhere && !root.inirEverywhere && status === Image.Ready
-        source: (root.auroraEverywhere && !root.inirEverywhere) ? root.wallpaperUrl : ""
+        source: root.wallpaperUrl
         fillMode: Image.PreserveAspectCrop
         // All GlassBackground instances share the same wallpaper URL and sourceSize,
         // so Qt's QPixmapCache serves a single decoded pixmap to all of them.
