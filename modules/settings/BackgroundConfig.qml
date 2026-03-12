@@ -37,6 +37,10 @@ ContentPage {
         expanded: false
         icon: "sync_alt"
         title: Translation.tr("Parallax")
+        // NOTE: When parallax is active (workspace or sidebar enabled), the shell renders
+        // the wallpaper internally instead of letting awww handle it. This means awww
+        // wallpaper transitions are replaced by a fade-in reveal after the transition
+        // completes at the compositor level. Blur and dim effects still work normally.
 
         SettingsGroup {
             SettingsSwitch {
@@ -1177,7 +1181,7 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "blur_on"
                 text: Translation.tr("Enable wallpaper blur")
-                checked: Config.options.background.effects.enableBlur
+                checked: Config.options?.background?.effects?.enableBlur ?? false
                 onCheckedChanged: {
                     Config.setNestedValue("background.effects.enableBlur", checked);
                 }
@@ -1187,10 +1191,10 @@ ContentPage {
             }
 
             ConfigSpinBox {
-                visible: Config.options.background.effects.enableBlur
+                visible: Config.options?.background?.effects?.enableBlur ?? false
                 icon: "blur_medium"
                 text: Translation.tr("Blur radius")
-                value: Config.options.background.effects.blurRadius
+                value: Config.options?.background?.effects?.blurRadius ?? 32
                 from: 0
                 to: 100
                 stepSize: 2
@@ -1203,26 +1207,10 @@ ContentPage {
             }
 
             ConfigSpinBox {
-                visible: Config.options.background.effects.enableBlur
-                icon: "blur_linear"
-                text: Translation.tr("Static blur when no windows (%)")
-                value: Config.options.background.effects.blurStatic
-                from: 0
-                to: 100
-                stepSize: 5
-                onValueChanged: {
-                    Config.setNestedValue("background.effects.blurStatic", value);
-                }
-                StyledToolTip {
-                    text: Translation.tr("Percentage of blur to keep even when no windows are open")
-                }
-            }
-
-            ConfigSpinBox {
-                visible: Config.options.background.effects.enableBlur
+                visible: Config.options?.background?.effects?.enableBlur ?? false
                 icon: "blur_circular"
                 text: Translation.tr("Thumbnail blur strength (%)")
-                value: Config.options.background.effects.thumbnailBlurStrength
+                value: Config.options?.background?.effects?.thumbnailBlurStrength ?? 50
                 from: 0
                 to: 100
                 stepSize: 5
@@ -1237,7 +1225,7 @@ ContentPage {
             ConfigSpinBox {
                 icon: "brightness_6"
                 text: Translation.tr("Dim overlay (%)")
-                value: Config.options.background.effects.dim
+                value: Config.options?.background?.effects?.dim ?? 0
                 from: 0
                 to: 100
                 stepSize: 5
@@ -1255,7 +1243,7 @@ ContentPage {
             ConfigSpinBox {
                 icon: "brightness_low"
                 text: Translation.tr("Extra dim when windows (%)")
-                value: Config.options.background.effects.dynamicDim
+                value: Config.options?.background?.effects?.dynamicDim ?? 0
                 from: 0
                 to: 100
                 stepSize: 5
@@ -1421,7 +1409,7 @@ ContentPage {
                 SettingsSwitch {
                     buttonIcon: "texture"
                     text: Translation.tr("Enable backdrop layer for overview")
-                    checked: Config.options.background.backdrop.enable
+                    checked: Config.options?.background?.backdrop?.enable ?? true
                     onCheckedChanged: {
                         Config.setNestedValue("background.backdrop.enable", checked);
                     }
@@ -1431,7 +1419,7 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     buttonIcon: "palette"
                     text: Translation.tr("Derive theme colors from backdrop")
                     checked: Config.options?.appearance?.wallpaperTheming?.useBackdropForColors ?? false
@@ -1448,10 +1436,10 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     buttonIcon: "play_circle"
                     text: Translation.tr("Enable animated wallpapers (videos/GIFs)")
-                    checked: Config.options.background.backdrop.enableAnimation
+                    checked: Config.options?.background?.backdrop?.enableAnimation ?? true
                     onCheckedChanged: {
                         Config.setNestedValue("background.backdrop.enableAnimation", checked);
                     }
@@ -1461,7 +1449,7 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable && Config.options.background.backdrop.enableAnimation
+                    visible: (Config.options?.background?.backdrop?.enable ?? true) && (Config.options?.background?.backdrop?.enableAnimation ?? true)
                     buttonIcon: "blur_circular"
                     text: Translation.tr("Blur animated wallpapers (videos/GIFs)")
                     checked: Config.options?.background?.backdrop?.enableAnimatedBlur ?? false
@@ -1474,10 +1462,10 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     buttonIcon: "blur_on"
                     text: Translation.tr("Aurora glass effect")
-                    checked: Config.options.background.backdrop.useAuroraStyle
+                    checked: Config.options?.background?.backdrop?.useAuroraStyle ?? false
                     onCheckedChanged: {
                         Config.setNestedValue("background.backdrop.useAuroraStyle", checked);
                     }
@@ -1487,15 +1475,15 @@ ContentPage {
                 }
 
                 ConfigSpinBox {
-                    visible: Config.options.background.backdrop.enable && Config.options.background.backdrop.useAuroraStyle
+                    visible: (Config.options?.background?.backdrop?.enable ?? true) && (Config.options?.background?.backdrop?.useAuroraStyle ?? false)
                     icon: "opacity"
                     text: Translation.tr("Aurora overlay opacity (%)")
-                    value: Math.round((Config.options.background.backdrop.auroraOverlayOpacity) * 100)
+                    value: Math.round((Config.options?.background?.backdrop?.auroraOverlayOpacity ?? 0.5) * 100)
                     from: 0
                     to: 200
                     stepSize: 5
                     onValueChanged: {
-                        Config.options.background.backdrop.auroraOverlayOpacity = value / 100.0;
+                        Config.setNestedValue("background.backdrop.auroraOverlayOpacity", value / 100.0);
                     }
                     StyledToolTip {
                         text: Translation.tr("Transparency of the color overlay on the blurred wallpaper")
@@ -1503,10 +1491,10 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     buttonIcon: "visibility_off"
                     text: Translation.tr("Hide main wallpaper (show only backdrop)")
-                    checked: Config.options.background.backdrop.hideWallpaper
+                    checked: Config.options?.background?.backdrop?.hideWallpaper ?? false
                     onCheckedChanged: {
                         Config.setNestedValue("background.backdrop.hideWallpaper", checked);
                     }
@@ -1516,10 +1504,10 @@ ContentPage {
                 }
 
                 SettingsSwitch {
-                    visible: Config.options.background.backdrop.enable && !(Config.options.background.backdrop.hideWallpaper ?? false)
+                    visible: (Config.options?.background?.backdrop?.enable ?? true) && !(Config.options?.background?.backdrop?.hideWallpaper ?? false)
                     buttonIcon: "image"
                     text: Translation.tr("Use main wallpaper")
-                    checked: Config.options.background.backdrop.useMainWallpaper
+                    checked: Config.options?.background?.backdrop?.useMainWallpaper ?? true
                     onCheckedChanged: {
                         Config.setNestedValue("background.backdrop.useMainWallpaper", checked);
                         if (checked) {
@@ -1532,10 +1520,10 @@ ContentPage {
                 }
 
                 TextEdit {
-                    visible: Config.options.background.backdrop.enable
-                             && !Config.options.background.backdrop.useMainWallpaper
+                    visible: (Config.options?.background?.backdrop?.enable ?? true)
+                             && !(Config.options?.background?.backdrop?.useMainWallpaper ?? true)
                     Layout.fillWidth: true
-                    text: Config.options.background.backdrop.wallpaperPath
+                    text: Config.options?.background?.backdrop?.wallpaperPath ?? ""
                     wrapMode: TextEdit.NoWrap
                     onTextChanged: {
                         Config.setNestedValue("background.backdrop.wallpaperPath", text);
@@ -1543,7 +1531,7 @@ ContentPage {
                 }
 
                 RippleButtonWithIcon {
-                    visible: !Config.options.background.backdrop.useMainWallpaper
+                    visible: !(Config.options?.background?.backdrop?.useMainWallpaper ?? true)
                     Layout.fillWidth: true
                     buttonRadius: Appearance.rounding.small
                     materialIcon: "wallpaper"
@@ -1555,15 +1543,15 @@ ContentPage {
                 }
 
                 ConfigSpinBox {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     icon: "blur_on"
                     text: Translation.tr("Backdrop blur radius")
-                    value: Config.options.background.backdrop.blurRadius
+                    value: Config.options?.background?.backdrop?.blurRadius ?? 64
                     from: 0
                     to: 100
                     stepSize: 2
                     onValueChanged: {
-                        Config.options.background.backdrop.blurRadius = value;
+                        Config.setNestedValue("background.backdrop.blurRadius", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Amount of blur applied to the backdrop layer")
@@ -1571,15 +1559,15 @@ ContentPage {
                 }
 
                 ConfigSpinBox {
-                    visible: Config.options.background.backdrop.enable
+                    visible: Config.options?.background?.backdrop?.enable ?? true
                     icon: "brightness_5"
                     text: Translation.tr("Backdrop dim (%)")
-                    value: Config.options.background.backdrop.dim
+                    value: Config.options?.background?.backdrop?.dim ?? 20
                     from: 0
                     to: 100
                     stepSize: 5
                     onValueChanged: {
-                        Config.options.background.backdrop.dim = value;
+                        Config.setNestedValue("background.backdrop.dim", value);
                     }
                     StyledToolTip {
                         text: Translation.tr("Darken the backdrop layer")

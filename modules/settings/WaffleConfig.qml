@@ -124,16 +124,6 @@ ContentPage {
             }
 
             ConfigSpinBox {
-                visible: Config.options?.waffles?.background?.effects?.enableBlur ?? false
-                icon: "blur_circular"
-                text: Translation.tr("Static blur (%)")
-                from: 0; to: 100; stepSize: 5
-                value: Config.options?.waffles?.background?.effects?.blurStatic ?? 0
-                onValueChanged: Config.setNestedValue("waffles.background.effects.blurStatic", value)
-                StyledToolTip { text: Translation.tr("Always-on blur percentage. Dynamic blur adds on top when windows are present.") }
-            }
-
-            ConfigSpinBox {
                 icon: "brightness_5"
                 text: Translation.tr("Dim (%)")
                 from: 0; to: 100; stepSize: 5

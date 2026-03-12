@@ -173,12 +173,28 @@ Variants {
             animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
         }
 
+        // Blur suppression during wallpaper transitions — briefly fades blur out
+        // so awww/crossfader transitions are visible, then fades back in.
+        property real _blurTransitionFactor: 1
+        SequentialAnimation {
+            id: _blurTransitionAnimation
+            NumberAnimation {
+                target: bgRoot; property: "_blurTransitionFactor"
+                to: 0; duration: Appearance.calcEffectiveDuration(200); easing.type: Easing.OutQuad
+            }
+            PauseAnimation {
+                duration: AwwwBackend.transitionDurationMs + 200
+            }
+            NumberAnimation {
+                target: bgRoot; property: "_blurTransitionFactor"
+                to: 1; duration: Appearance.calcEffectiveDuration(400); easing.type: Easing.InOutQuad
+            }
+        }
+
         property real blurProgress: {
             const effects = bgRoot.effectsOptions;
             if (!(effects?.enableBlur && (effects?.blurRadius ?? 0) > 0)) return 0;
-            const base = Math.max(0, Math.min(100, Number(effects?.blurStatic ?? 0)));
-            const total = (base + (100 - base) * focusPresenceProgress) / 100;
-            return Math.max(0, Math.min(1, total));
+            return focusPresenceProgress * _blurTransitionFactor;
         }
 
         // Layer props
@@ -204,6 +220,9 @@ Variants {
                 _awwwRevealAnimation.restart()
                 bgRoot.effectiveWallpaperScale = bgRoot.preferredWallpaperScale
             }
+            // Suppress blur during transition so the wallpaper change is visible
+            if (bgRoot.blurProgress > 0)
+                _blurTransitionAnimation.restart()
             bgRoot.updateZoomScale()
         }
 
@@ -383,7 +402,7 @@ Variants {
                     return [x1, y1, x2, y2, 1, 1]
                 }
                 Behavior on width {
-                    enabled: Appearance.animationsEnabled && wallpaperContainer.useParallax && bgRoot._awwwRevealOpacity >= 1
+                    enabled: Appearance.animationsEnabled && wallpaperContainer.useParallax
                     NumberAnimation {
                         duration: wallpaperContainer._transitionDur
                         easing.type: Easing.BezierSpline
@@ -391,7 +410,7 @@ Variants {
                     }
                 }
                 Behavior on height {
-                    enabled: Appearance.animationsEnabled && wallpaperContainer.useParallax && bgRoot._awwwRevealOpacity >= 1
+                    enabled: Appearance.animationsEnabled && wallpaperContainer.useParallax
                     NumberAnimation {
                         duration: wallpaperContainer._transitionDur
                         easing.type: Easing.BezierSpline
@@ -444,6 +463,12 @@ Variants {
                     source: (bgRoot.wallpaperSafetyTriggered || !bgRoot.wallpaperIsGif) ? "" : bgRoot.wallpaperPathRaw
                     fillMode: Image.PreserveAspectCrop
                     // No sourceSize for GIFs - let Qt handle native size for performance
+
+                    layer.enabled: Appearance.effectsEnabled && (bgRoot.effectsOptions.enableAnimatedBlur ?? false) && (bgRoot.effectsOptions.blurRadius ?? 0) > 0
+                    layer.effect: GaussianBlur {
+                        radius: Math.round((bgRoot.effectsOptions.blurRadius ?? 32) * Math.max(0, Math.min(1, (bgRoot.effectsOptions.thumbnailBlurStrength ?? 50) / 100)))
+                        samples: radius * 2 + 1
+                    }
                 }
 
                 // Video wallpaper (Qt Multimedia)
@@ -521,10 +546,16 @@ Variants {
                             }
                         }
                     }
+
+                    layer.enabled: Appearance.effectsEnabled && (bgRoot.effectsOptions.enableAnimatedBlur ?? false) && (bgRoot.effectsOptions.blurRadius ?? 0) > 0
+                    layer.effect: GaussianBlur {
+                        radius: Math.round((bgRoot.effectsOptions.blurRadius ?? 32) * Math.max(0, Math.min(1, (bgRoot.effectsOptions.thumbnailBlurStrength ?? 50) / 100)))
+                        samples: radius * 2 + 1
+                    }
                 }
             }
 
-            // Always-on wallpaper blur (disabled for GIFs and videos - too expensive)
+            // Always-on wallpaper blur — reads from crossfader texture (works with both QML and awww rendering; disabled for GIFs/videos)
             Loader {
                 id: blurAlwaysLoader
                 z: 1
@@ -537,7 +568,6 @@ Variants {
                         && !bgRoot.backdropActive
                         && !bgRoot.wallpaperIsGif
                         && !bgRoot.wallpaperIsVideo
-                        && !bgRoot.externalMainWallpaperActive
                 anchors.fill: wallpaperContainer
                 sourceComponent: Item {
                     anchors.fill: parent
@@ -546,10 +576,7 @@ Variants {
                     GaussianBlur {
                         anchors.fill: parent
                         source: wallpaper
-                        // For videos, apply videoBlurStrength as a percentage of the full blur radius
-                        radius: bgRoot.wallpaperIsVideo
-                            ? Math.round((bgRoot.effectsOptions.blurRadius ?? 32) * Math.max(0, Math.min(1, (bgRoot.effectsOptions.videoBlurStrength ?? 50) / 100)))
-                            : (bgRoot.effectsOptions.blurRadius ?? 32)
+                        radius: bgRoot.effectsOptions.blurRadius ?? 32
                         samples: radius * 2 + 1
                     }
                 }
