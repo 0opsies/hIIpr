@@ -5,6 +5,49 @@ All notable changes to iNiR will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.1] - 2026-03-12
+
+### Added
+- **Backdrop wallpaper transitions**: Both ii and waffle backdrops now use `WallpaperCrossfader` for smooth wallpaper transition animations matching their workspace counterparts.
+- **Animated blur toggle**: New `enableAnimatedBlur` config key for GIF/video wallpapers in both families.
+- **Blur transition suppression**: Blur fades out before wallpaper transitions so the change is visible even with windows open, then fades back in after transition completes.
+- **Waffle backdrop effects controls**: Vignette, saturation, contrast, and animated blur controls added to waffle backdrop settings.
+- **Waffle transition config**: Independent transition settings for waffle wallpapers (`waffles.background.transition`).
+- **Spicetify wallpaper theming**: Opt-in Material You color scheme for Spotify via Spicetify with live watch mode — colors update on wallpaper change without restarting Spotify (PR #80 by @yukazakiri).
+- **Migration 013**: Auto-patch kde-material-you-colors wrapper on update.
+- **Migration 014**: Malloc arena optimization (`MALLOC_ARENA_MAX=2`, `MALLOC_MMAP_THRESHOLD_=131072`) for reduced glibc memory overhead.
+- **Migration 015**: Clean orphan config keys (`blurStatic`, `videoBlurStrength` → `thumbnailBlurStrength`) from existing user configs.
+
+### Changed
+- **Blur decoupled from awww renderer**: Blur now reads from the crossfader texture regardless of who renders the visible wallpaper, fixing blur not working when parallax is disabled.
+- **blurStatic removed**: Blur only activates when windows are present on the workspace. The always-on `blurStatic` option caused rendering issues in both families and has been removed.
+- **videoBlurStrength → thumbnailBlurStrength**: Renamed for clarity; migration preserves user values.
+- **Saturation/contrast defaults**: Changed from 1.0 to 0 (neutral) for new installs. Existing users keep their values.
+- **Backend provider hardcoded**: `awww` backend is now always active (config key ignored, no UI change).
+- **Settings surfaces refreshed**: Updated quick options, control panel, and shell surfaces.
+
+### Fixed
+- **Wallpaper double-apply**: Prevent duplicate `switchwall.sh` runs with `_applyInProgress` suppression flag and 3-second timer.
+- **kde-material-you-colors stacking**: Kill previous daemon instance before launching new one to prevent orphan processes.
+- **StyledListView animations**: Use `Transition.enabled` instead of `running` on child animations to prevent animation glitches.
+- **Blur alignment**: Reverted `sourceSize÷4` to screen resolution for correct blur positioning.
+- **Blur source loading**: Keep wallpaper source always loaded to avoid style-switch freeze.
+- **Todo.qml runtime error**: Replaced invalid `Process.exec` with `Quickshell.execDetached`.
+- **Config schema sync**: Added `enableOpenCode`, `vscodeEditors` (14 editor forks), and `omp` (oh-my-posh) to schema and defaults — keys existed in theming scripts but were missing from Config.qml.
+- **Kitty tab bar colors**: Update live via SIGUSR1 and atomic symlink swap.
+- **WaffleConfig stale reference**: Removed UI control for deleted `blurStatic` config key.
+
+### Performance
+- **Animation instances**: Replaced 402 `createObject` calls with inline `Animation` instances, eliminating per-animation QObject allocation overhead.
+- **Blur GPU gating**: Style-gated `layer.enabled` and `source` on all blur Images — GPU blur work only runs when the active style uses it. Reduced `blurMax` from 100 to 64.
+- **Wallpaper caching**: `cache:false` on all wallpaper Images across both families with `sourceSize` constraints to cap decoded pixmap resolution.
+- **Thumbnail caching**: Skip `magick` subprocess when thumbnail is already loaded; cache `magick identify` results.
+- **Crossfader optimization**: `cache:false` on crossfader slots, release inactive slot texture after transition completes.
+- **ColorQuantizer gating**: Only run wallpaper ColorQuantizer when aurora/angel style is active.
+
+### Community
+- PR #80 by @yukazakiri — Spicetify wallpaper theming support
+
 ## [2.13.0] - 2026-03-08
 
 ### Added
