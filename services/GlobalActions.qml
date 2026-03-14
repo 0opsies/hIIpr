@@ -166,7 +166,9 @@ Singleton {
             icon: "lock",
             category: "system",
             keywords: ["lock", "security", "screen"],
-            execute: () => { GlobalStates.screenLocked = true }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "lock", "activate"])
+            }
         },
         {
             id: "open-session",
@@ -175,7 +177,9 @@ Singleton {
             icon: "power_settings_new",
             category: "system",
             keywords: ["power", "shutdown", "reboot", "logout", "suspend", "session"],
-            execute: () => { GlobalStates.sessionOpen = true }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "session", "open"])
+            }
         },
         {
             id: "open-settings",
@@ -267,8 +271,8 @@ Singleton {
             category: "appearance",
             keywords: ["wallpaper", "background", "wall", "image", "grid"],
             execute: () => {
-                GlobalStates.coverflowSelectorOpen = false
-                GlobalStates.wallpaperSelectorOpen = true
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "coverflowSelector", "close"])
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "open"])
             }
         },
         {
@@ -279,8 +283,8 @@ Singleton {
             category: "appearance",
             keywords: ["wallpaper", "background", "wall", "coverflow", "carousel"],
             execute: () => {
-                GlobalStates.wallpaperSelectorOpen = false
-                GlobalStates.coverflowSelectorOpen = true
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "wallpaperSelector", "close"])
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "coverflowSelector", "open"])
             }
         },
         {
@@ -350,7 +354,9 @@ Singleton {
             icon: "screenshot_region",
             category: "tools",
             keywords: ["screenshot", "snip", "capture", "screen", "region"],
-            execute: () => { GlobalStates.regionSelectorOpen = true }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "region", "screenshot"])
+            }
         },
         {
             id: "color-picker",
@@ -385,7 +391,9 @@ Singleton {
             icon: "content_paste",
             category: "tools",
             keywords: ["clipboard", "paste", "history", "cliphist", "copy"],
-            execute: () => { GlobalStates.clipboardOpen = true }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "clipboard", "open"])
+            }
         },
         {
             id: "music-recognition",
@@ -403,7 +411,15 @@ Singleton {
             icon: "sticky_note_2",
             category: "tools",
             keywords: ["notepad", "notes", "write", "text", "memo"],
-            execute: () => { GlobalStates.sidebarRightOpen = true }
+            execute: () => {
+                const enabledWidgets = Config.options?.sidebar?.right?.enabledWidgets ?? ["calendar", "todo", "notepad", "calculator", "sysmon", "timer"]
+                const notepadIndex = Math.max(0, enabledWidgets.indexOf("notepad"))
+                GlobalStates.sidebarRightOpen = true
+                if (Persistent?.states?.sidebar?.bottomGroup) {
+                    Persistent.states.sidebar.bottomGroup.collapsed = false
+                    Persistent.states.sidebar.bottomGroup.tab = notepadIndex
+                }
+            }
         },
         {
             id: "wipe-clipboard",
@@ -459,7 +475,9 @@ Singleton {
             icon: "keyboard",
             category: "tools",
             keywords: ["keyboard", "shortcuts", "cheatsheet", "keybinds", "hotkeys"],
-            execute: () => { GlobalStates.cheatsheetOpen = true }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "cheatsheet", "open"])
+            }
         },
         {
             id: "toggle-crosshair",
@@ -481,7 +499,9 @@ Singleton {
             icon: "play_pause",
             category: "media",
             keywords: ["play", "pause", "media", "music", "player", "mpris"],
-            execute: () => { MprisController.togglePlaying() }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "mpris", "playPause"])
+            }
         },
         {
             id: "media-next",
@@ -490,7 +510,9 @@ Singleton {
             icon: "skip_next",
             category: "media",
             keywords: ["next", "skip", "track", "media", "forward"],
-            execute: () => { MprisController.next() }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "mpris", "next"])
+            }
         },
         {
             id: "media-previous",
@@ -499,7 +521,9 @@ Singleton {
             icon: "skip_previous",
             category: "media",
             keywords: ["previous", "back", "track", "media", "rewind"],
-            execute: () => { MprisController.previous() }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "mpris", "previous"])
+            }
         },
         {
             id: "toggle-mute",
@@ -623,7 +647,9 @@ Singleton {
             icon: "overview",
             category: "settings",
             keywords: ["overview", "windows", "workspace"],
-            execute: () => { GlobalStates.overviewOpen = !GlobalStates.overviewOpen }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "overview", "toggle"])
+            }
         },
         {
             id: "open-sidebar-left",
@@ -632,7 +658,9 @@ Singleton {
             icon: "side_navigation",
             category: "settings",
             keywords: ["sidebar", "left", "panel"],
-            execute: () => { GlobalStates.sidebarLeftOpen = true }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "sidebarLeft", "open"])
+            }
         },
         {
             id: "open-sidebar-right",
@@ -641,7 +669,9 @@ Singleton {
             icon: "right_panel_open",
             category: "settings",
             keywords: ["sidebar", "right", "panel"],
-            execute: () => { GlobalStates.sidebarRightOpen = true }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "sidebarRight", "open"])
+            }
         },
         {
             id: "toggle-osk",
@@ -650,7 +680,9 @@ Singleton {
             icon: "keyboard",
             category: "settings",
             keywords: ["osk", "keyboard", "onscreen", "virtual"],
-            execute: () => { GlobalStates.oskOpen = !GlobalStates.oskOpen }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "osk", "toggle"])
+            }
         },
         {
             id: "zoom-in",
@@ -686,7 +718,9 @@ Singleton {
             icon: "dashboard",
             category: "settings",
             keywords: ["family", "panel", "ii", "material", "layout"],
-            execute: () => { Config.setNestedValue("panelFamily", "ii") }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "panelFamily", "set", "ii"])
+            }
         },
         {
             id: "switch-family-waffle",
@@ -695,7 +729,9 @@ Singleton {
             icon: "grid_view",
             category: "settings",
             keywords: ["family", "panel", "waffle", "win11", "windows", "layout"],
-            execute: () => { Config.setNestedValue("panelFamily", "waffle") }
+            execute: () => {
+                Quickshell.execDetached(["/usr/bin/qs", "-c", "ii", "ipc", "call", "panelFamily", "set", "waffle"])
+            }
         },
     ]
 
