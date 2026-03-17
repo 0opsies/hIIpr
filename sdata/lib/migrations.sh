@@ -243,9 +243,11 @@ apply_migration() {
     local target_file
     target_file=$(resolve_migration_target_file "$MIGRATION_TARGET_FILE")
     if [[ -n "$target_file" && ! -f "$target_file" ]]; then
-        tui_check_skip "Target file not found: $(basename "$target_file")"
-        mark_migration_skipped "$migration_id"
-        return 0
+        if [[ "${MIGRATION_REQUIRED:-false}" != "true" ]]; then
+            tui_check_skip "Target file not found: $(basename "$target_file")"
+            mark_migration_skipped "$migration_id"
+            return 0
+        fi
     fi
     
     # Create backup

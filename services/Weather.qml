@@ -676,9 +676,10 @@ Singleton {
 
                 try {
                     const parsed = JSON.parse(payload);
+                    const weatherPayload = parsed?.data ?? parsed ?? {}
                     const normalized = {
-                        current: parsed?.current ?? parsed?.current_condition?.[0],
-                        astronomy: parsed?.astronomy ?? parsed?.weather?.[0]?.astronomy?.[0]
+                        current: weatherPayload?.current ?? weatherPayload?.current_condition?.[0],
+                        astronomy: weatherPayload?.astronomy ?? weatherPayload?.weather?.[0]?.astronomy?.[0]
                     }
                     root.refineData(normalized);
                     root._emptyResponseCount = 0;
