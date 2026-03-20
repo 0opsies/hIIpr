@@ -125,11 +125,39 @@ ApplicationWindow {
         anchors.fill: parent
         visible: !root.uiReady
         
-        WText {
+        ColumnLayout {
             anchors.centerIn: parent
-            text: Translation.tr("Loading...")
-            font.pixelSize: Looks.font.pixelSize.larger
-            color: Looks.colors.subfg
+            spacing: 16
+            
+            FluentIcon {
+                Layout.alignment: Qt.AlignHCenter
+                icon: "settings"
+                implicitSize: 32
+                color: Looks.colors.accent
+                opacity: loadingPulse.running ? 1 : 0.6
+                
+                SequentialAnimation on opacity {
+                    id: loadingPulse
+                    running: !root.uiReady
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.3; duration: 800; easing.type: Easing.InOutQuad }
+                    NumberAnimation { to: 0.9; duration: 800; easing.type: Easing.InOutQuad }
+                }
+                
+                RotationAnimation on rotation {
+                    running: !root.uiReady
+                    from: 0; to: 360
+                    duration: 3000
+                    loops: Animation.Infinite
+                }
+            }
+            
+            WText {
+                Layout.alignment: Qt.AlignHCenter
+                text: Translation.tr("Loading...")
+                font.pixelSize: Looks.font.pixelSize.normal
+                color: Looks.colors.subfg
+            }
         }
     }
     
