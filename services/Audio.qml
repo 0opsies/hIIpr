@@ -59,7 +59,25 @@ Singleton {
             && Number(candidate.id ?? 0) === driverId
         )
 
-        return physicalSink ?? node
+        if (physicalSink) return physicalSink
+
+        // Fallback: find the first non-virtual, non-EasyEffects hardware sink.
+        // This handles cases where EasyEffects uses pw-loopback/filter-chain and
+        // driver-id doesn't point directly to the hardware sink node.
+        const fallbackSink = Pipewire.nodes.values.find(candidate => {
+            if (!root.correctType(candidate, true) || candidate.isStream) return false
+            const cProps = candidate.properties ?? {}
+            const cName = String(cProps["node.name"] ?? candidate.name ?? "")
+            const cAppId = String(cProps["application.id"] ?? "")
+            const cVirtual = String(cProps["node.virtual"] ?? "false") === "true"
+            const cPassthrough = String(cProps["monitor.passthrough"] ?? "false") === "true"
+            const isEE = cName === "easyeffects_sink"
+                || cAppId === "com.github.wwmm.easyeffects"
+                || (cVirtual && cPassthrough)
+            return !isEE
+        })
+
+        return fallbackSink ?? node
     }
 
     // Lists
