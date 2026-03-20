@@ -748,6 +748,17 @@ ContentPage {
             }
 
             SettingsSwitch {
+                buttonIcon: "desktop_windows"
+                text: Translation.tr("Per-monitor")
+                checked: Config.options?.bar?.workspaces?.perMonitor ?? true
+                onCheckedChanged: Config.setNestedValue("bar.workspaces.perMonitor", checked)
+                visible: CompositorService.isNiri
+                StyledToolTip {
+                    text: Translation.tr("Each bar shows workspaces for its own monitor")
+                }
+            }
+
+            SettingsSwitch {
                 buttonIcon: "swap_vert"
                 text: Translation.tr("Invert scroll")
                 checked: Config.options?.bar?.workspaces?.invertScroll ?? false
@@ -814,7 +825,7 @@ ContentPage {
                         Config.setNestedValue("bar.workspaces.numberMap", JSON.parse(newValue))
                     }
                     options: [
-                        { displayName: Translation.tr("Normal"), icon: "pulse", value: '["1","2","3","4","5","6","7","8","9","10"]' },
+                        { displayName: Translation.tr("Normal"), icon: "123", value: '["1","2","3","4","5","6","7","8","9","10"]' },
                         { displayName: Translation.tr("Japanese"), icon: "square_dot", value: '["一","二","三","四","五","六","七","八","九","十"]' },
                         { displayName: Translation.tr("Roman"), icon: "account_balance", value: '["I","II","III","IV","V","VI","VII","VIII","IX","X"]' }
                     ]
