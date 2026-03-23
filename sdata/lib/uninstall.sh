@@ -267,8 +267,9 @@ get_package_removal_safety() {
 uninstall_stop_services() {
     tui_info "Stopping iNiR services..."
 
-    # Stop quickshell ii config only
-    qs kill -c inir 2>/dev/null || true
+    # Stop quickshell inir config
+    local runtime_target="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/inir"
+    qs -p "$runtime_target" kill 2>/dev/null || true
 
     # Stop super daemon if running
     if command -v systemctl &>/dev/null && [[ -d /run/systemd/system ]]; then

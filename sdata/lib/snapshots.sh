@@ -145,7 +145,8 @@ restore_snapshot() {
     echo -e "${STY_CYAN}Restoring snapshot: ${snapshot_id}${STY_RST}"
     
     # Stop shell
-    qs kill -c inir &>/dev/null || true
+    local runtime_target="${XDG_CONFIG_HOME}/quickshell/inir"
+    qs -p "$runtime_target" kill &>/dev/null || true
     
     # Restore QML code
     if [[ -d "${snapshot_dir}/inir" ]]; then
@@ -193,12 +194,12 @@ restore_snapshot() {
     # Restart shell (only if we have access to the session)
     if [[ -n "$NIRI_SOCKET" ]] || [[ -n "$WAYLAND_DISPLAY" ]]; then
         log_info "Starting shell..."
-        nohup qs -c inir >/dev/null 2>&1 &
+        nohup qs -p "$runtime_target" >/dev/null 2>&1 &
         disown
         tui_success "Snapshot restored and shell restarted"
     else
         tui_warn "Not in graphical session - shell restart skipped"
-        tui_info "Run: qs -c inir (in your Niri session)"
+        tui_info "Run: inir start (in your Niri session)"
         tui_success "Snapshot restored"
     fi
 }

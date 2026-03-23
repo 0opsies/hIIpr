@@ -158,18 +158,21 @@ wait_for_stop() {
 }
 
 start_background() {
-    (
+    local dir="$1"
+    nohup /usr/bin/env bash -c '
+        set -euo pipefail
+        qs_bin="$1"
+        config_dir="$2"
         while true; do
             set +e
-            "$qs_bin" -n -p "$1"
+            "$qs_bin" -n -p "$config_dir"
             exit_code=$?
             set -e
             [[ $exit_code -eq 0 ]] && break
             echo "[inir] quickshell exited with code $exit_code, restarting in 1s..." >&2
             sleep 1
         done
-    ) &
-    disown || true
+    ' _ "$qs_bin" "$dir" >/dev/null 2>&1 &
 }
 
 kill_shell() {
@@ -204,7 +207,11 @@ restart_shell() {
         fi
     fi
 
-    exec "$qs_bin" -n -d -p "$dir"
+    start_background "$dir"
+    if ! wait_for_start "$dir"; then
+        echo "Timed out waiting for iNiR to start" >&2
+        exit 1
+    fi
 }
 
 open_settings() {
@@ -657,20 +664,7 @@ case "$command_name" in
             esac
         done
         resolve_config_dir
-        # Launch with a background watchdog so hot-reload crashes auto-restart.
-        # The watchdog runs detached; exit code 0 from qs = intentional stop, no restart.
-        (
-            while true; do
-                set +e
-                "$qs_bin" -n -p "$config_dir"
-                exit_code=$?
-                set -e
-                [[ $exit_code -eq 0 ]] && break
-                echo "[inir] quickshell exited with code $exit_code, restarting in 1s..." >&2
-                sleep 1
-            done
-        ) &
-        disown
+        start_background "$config_dir"
         ;;
     stop)
         while [[ $# -gt 0 ]]; do
@@ -1038,11 +1032,6 @@ case "$command_name" in
         usage
         ;;
     *)
-        if [[ $# -ge 1 ]]; then
-            run_ipc_target_command "$command_name" "$@"
-        fi
-        echo "Unknown command: $command_name" >&2
-        usage
-        exit 1
+        run_ipc_target_command "$command_name" "$@"
         ;;
 esac

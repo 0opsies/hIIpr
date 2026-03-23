@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import shutil
 import subprocess
 import time
 
@@ -34,7 +35,11 @@ INIR_ENV_PID = None
 
 
 def _find_inir_pid():
-    """Locate the PID of the `qs -c inir` process by inspecting /proc."""
+    """Locate the PID of the running iNiR quickshell process by inspecting /proc.
+
+    Matches both legacy ``qs -c inir`` invocations and the current
+    path-based ``qs -p <path>`` / ``qs -n -p <path>`` form.
+    """
     proc_root = "/proc"
     for entry in os.listdir(proc_root):
         if not entry.isdigit():
@@ -49,18 +54,27 @@ def _find_inir_pid():
         if not raw:
             continue
         args = [a for a in raw.split("\0") if a]
-        if len(args) < 3:
+        if len(args) < 2:
             continue
         exe = os.path.basename(args[0])
         if exe != "qs":
             continue
-        if args[1] == "-c" and args[2] == "inir":
+        # Legacy: qs -c inir
+        if len(args) >= 3 and args[1] == "-c" and args[2] == "inir":
             return pid
+        # Path-based: qs ... -p <path>/shell.qml  or  qs ... -p <path>
+        # where <path> ends with /inir or contains /inir/
+        for i, arg in enumerate(args[1:], 1):
+            if arg == "-p" and i + 1 < len(args):
+                p = args[i + 1]
+                if p.rstrip("/").endswith("/inir") or "/inir/" in p:
+                    return pid
+                break
     return None
 
 
 def get_inir_env():
-    """Get relevant environment variables from the running `qs -c inir`
+    """Get relevant environment variables from the running iNiR quickshell
     session to reuse them when calling IPC.
 
     Caches the environment while the PID stays the same to reduce
@@ -88,7 +102,12 @@ def get_inir_env():
                 continue
             k, v = entry.split("=", 1)
             # Only keep what matters for Wayland / Qt
-            if k in ("WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "QT_QPA_PLATFORM", "NIRI_SOCKET"):
+            if k in (
+                "WAYLAND_DISPLAY",
+                "XDG_RUNTIME_DIR",
+                "QT_QPA_PLATFORM",
+                "NIRI_SOCKET",
+            ):
                 env_vars[k] = v
         INIR_ENV_CACHE = env_vars
         INIR_ENV_PID = pid
@@ -120,11 +139,17 @@ def find_keyboard_devices():
         has_pointer_button = any(code in POINTER_BUTTON_CODES for code in caps)
 
         if has_super:
-            print(f"[inir-super-daemon] Using keyboard device {path} ({dev.name}), has_super={has_super}", flush=True)
+            print(
+                f"[inir-super-daemon] Using keyboard device {path} ({dev.name}), has_super={has_super}",
+                flush=True,
+            )
             keyboards.append(path)
 
         if has_pointer_button:
-            print(f"[inir-super-daemon] Using pointer device {path} ({dev.name}), has_pointer_button={has_pointer_button}", flush=True)
+            print(
+                f"[inir-super-daemon] Using pointer device {path} ({dev.name}), has_pointer_button={has_pointer_button}",
+                flush=True,
+            )
             pointers.append(path)
 
     if not keyboards:
@@ -134,7 +159,11 @@ def find_keyboard_devices():
 
 
 async def monitor_device(path):
-    global super_down_global, interaction_since_super_down, last_toggle_time, tap_handled
+    global \
+        super_down_global, \
+        interaction_since_super_down, \
+        last_toggle_time, \
+        tap_handled
     dev = InputDevice(path)
     super_down = False
     chord = False
@@ -155,18 +184,29 @@ async def monitor_device(path):
                 interaction_since_super_down = False
                 tap_handled = False
             elif value == key_event.key_up:
-                if super_down and not chord and not interaction_since_super_down and not tap_handled:
+                if (
+                    super_down
+                    and not chord
+                    and not interaction_since_super_down
+                    and not tap_handled
+                ):
                     # Tap of Super with no other keys or clicks: toggle inir overview
                     # with a global debounce so multiple devices don't double-trigger.
                     now = time.monotonic()
                     if now - last_toggle_time >= DEBOUNCE_SEC:
                         last_toggle_time = now
                         tap_handled = True
-                        print("[inir-super-daemon] Super tap detected, toggling inir overview", flush=True)
+                        print(
+                            "[inir-super-daemon] Super tap detected, toggling inir overview",
+                            flush=True,
+                        )
                         try:
                             inir_env = get_inir_env()
                             if not inir_env:
-                                print("[inir-super-daemon] No inir env available, skipping toggle", flush=True)
+                                print(
+                                    "[inir-super-daemon] No inir env available, skipping toggle",
+                                    flush=True,
+                                )
                                 super_down = False
                                 super_down_global = False
                                 interaction_since_super_down = False
@@ -175,22 +215,22 @@ async def monitor_device(path):
                             env = os.environ.copy()
                             env.update(inir_env)
 
+                            # Resolve the inir launcher for the IPC call
+                            inir_bin = os.environ.get(
+                                "INIR_LAUNCHER_PATH",
+                                shutil.which("inir") or "inir",
+                            )
                             subprocess.Popen(
-                                [
-                                    "qs",
-                                    "-c",
-                                    "inir",
-                                    "ipc",
-                                    "call",
-                                    "overview",
-                                    "toggle",
-                                ],
+                                [inir_bin, "overview", "toggle"],
                                 env=env,
                                 stdout=subprocess.DEVNULL,
                                 stderr=subprocess.DEVNULL,
                             )
                         except Exception as e:
-                            print(f"[inir-super-daemon] Error running toggle command: {e}", flush=True)
+                            print(
+                                f"[inir-super-daemon] Error running toggle command: {e}",
+                                flush=True,
+                            )
                 super_down = False
                 chord = False
                 super_down_global = False
@@ -230,7 +270,10 @@ async def main():
         keyboard_paths, pointer_paths = find_keyboard_devices()
         if keyboard_paths:
             break
-        print("[inir-super-daemon] No keyboards with Super yet, retrying in 5s", flush=True)
+        print(
+            "[inir-super-daemon] No keyboards with Super yet, retrying in 5s",
+            flush=True,
+        )
         await asyncio.sleep(5)
 
     tasks = [asyncio.create_task(monitor_device(p)) for p in keyboard_paths]

@@ -213,14 +213,14 @@ verify_qs_loads() {
     local timeout_sec="${1:-$VERIFICATION_TIMEOUT}"
     
     # Kill any existing instance
-    qs kill -c inir 2>/dev/null || true
+    qs -p "$II_TARGET" kill 2>/dev/null || true
     sleep 0.5
     
     # Try to start and capture output
     local output
     local exit_code
     
-    output=$(timeout "$timeout_sec" qs -c inir 2>&1) || exit_code=$?
+    output=$(timeout "$timeout_sec" qs -p "$II_TARGET" 2>&1) || exit_code=$?
     
     # Check for fatal errors (not warnings)
     if echo "$output" | grep -qE "^[[:space:]]*(ERROR|FATAL|error:|Error:)" | grep -v "polkit\|bluez"; then

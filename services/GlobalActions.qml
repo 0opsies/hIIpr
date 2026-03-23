@@ -15,7 +15,7 @@ import Quickshell.Io
  *
  * Provides a unified, categorized catalog of shell actions that can be:
  * - Searched via the overview launcher (action prefix)
- * - Invoked via IPC: `qs -c ii ipc call globalActions run <actionId> [args]`
+ * - Invoked via IPC: `inir globalActions run <actionId> [args]`
  * - Extended by users via scripts in ~/.config/illogical-impulse/actions/
  *
  * Architecture:
