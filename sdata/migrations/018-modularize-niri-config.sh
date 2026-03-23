@@ -137,6 +137,46 @@ binds_text = normalize_text(buckets["70"]).replace(
     f'spawn "{launcher_path}" "close-window"',
 )
 
+USER_EXTRA_TEMPLATE = """\
+// ─────────────────────────────────────────────────────────────────────────────
+// 90 — Your personal overrides
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// This file is YOURS. iNiR updates will never overwrite it.
+// Put any custom configuration here: extra binds, per-app window rules,
+// output configuration, named workspaces, etc.
+//
+// Since Niri evaluates config top-to-bottom, settings here take effect
+// after all other config.d files. For window-rule properties, all matching
+// rules accumulate. For scalar values (like gaps), the last one wins.
+//
+// Examples:
+//
+//   // Named workspaces (sticky, always present)
+//   workspace "browser"
+//   workspace "code"
+//   workspace "music"
+//
+//   // Per-app workspace assignment
+//   window-rule {
+//       match app-id="firefox"
+//       open-on-workspace "browser"
+//   }
+//
+//   // Extra keybind
+//   binds {
+//       Mod+P { spawn "rofi" "-show" "drun"; }
+//   }
+//
+//   // Output config for your specific monitor
+//   output "DP-1" {
+//       mode "3440x1440@100.000"
+//       scale 1
+//       position x=0 y=0
+//   }
+// ─────────────────────────────────────────────────────────────────────────────
+"""
+
 write_map = {
     "10": normalize_text(buckets["10"]),
     "20": normalize_text(buckets["20"]),
@@ -146,7 +186,7 @@ write_map = {
     "60": normalize_text(buckets["60"]),
     "70": binds_text,
     "80": normalize_text(buckets["80"]),
-    "90": normalize_text(buckets["90"]),
+    "90": normalize_text(buckets["90"]) or USER_EXTRA_TEMPLATE,
 }
 
 for key, filename in bucket_files.items():

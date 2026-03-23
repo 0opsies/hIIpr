@@ -114,13 +114,23 @@ ACTION_MAP = {
     # Window management
     'close-window': 'Close window',
     'maximize-column': 'Maximize column',
+    'maximize-window-to-edges': 'Maximize to edges',
     'fullscreen-window': 'Fullscreen',
     'toggle-window-floating': 'Toggle floating',
+    'switch-focus-between-floating-and-tiling': 'Switch float/tile focus',
     'center-column': 'Center column',
+    'center-visible-columns': 'Center visible columns',
+    'expand-column-to-available-width': 'Expand to available width',
     'consume-or-expel-window-left': 'Consume/expel left',
     'consume-or-expel-window-right': 'Consume/expel right',
     'expel-window-from-column': 'Expel from column',
     'consume-window-into-column': 'Consume into column',
+    
+    # Column layout
+    'switch-preset-column-width': 'Cycle column width',
+    'switch-preset-window-height': 'Cycle window height',
+    'reset-window-height': 'Reset window height',
+    'toggle-column-tabbed-display': 'Toggle tabbed display',
     
     # Focus
     'focus-column-left': 'Focus left',
@@ -175,6 +185,8 @@ IPC_MAP = {
     ('settings', 'open'): 'Settings',
     ('cheatsheet', 'toggle'): 'Cheatsheet',
     ('panelFamily', 'cycle'): 'Cycle panel style',
+    ('session', 'toggle'): 'Session dialog',
+    ('browser', 'open'): 'Browser',
     ('audio', 'volumeUp'): 'Volume up',
     ('audio', 'volumeDown'): 'Volume down',
     ('audio', 'mute'): 'Mute audio',
@@ -213,6 +225,10 @@ def parse_inir_action(action: str) -> tuple[str, str] | None:
     if close_window_match:
         return 'launcher', 'close-window'
 
+    browser_match = re.search(r'spawn\s+"(?:[^"]*/)?inir"\s+"browser"(?:\s|;|$)', action)
+    if browser_match:
+        return 'browser', 'open'
+
     direct_match = re.search(r'spawn\s+"(?:[^"]*/)?inir"\s+"([\w-]+)"\s+"([\w-]+)"', action)
     if direct_match:
         return direct_match.group(1), direct_match.group(2)
@@ -233,6 +249,14 @@ def generate_comment(action: str) -> str:
     if ws_match:
         ws_action = 'Focus' if 'focus' in ws_match.group(1) else 'Move to'
         return f'{ws_action} workspace {ws_match.group(2)}'
+    
+    # Parameterized resize actions: set-column-width "-10%", set-window-height "+10%"
+    resize_match = re.match(r'set-(column-width|window-height)\s+"([+-]\d+%?)"', action)
+    if resize_match:
+        target = 'column' if 'column' in resize_match.group(1) else 'window'
+        val = resize_match.group(2)
+        direction = 'Shrink' if val.startswith('-') else 'Grow'
+        return f'{direction} {target} {val.lstrip("+-")}'
     
     # Spawn commands
     if action.startswith('spawn'):
@@ -301,7 +325,7 @@ def categorize_keybind(kb: dict) -> str:
     inir_action = parse_inir_action(action)
     if inir_action:
         target, _func = inir_action
-        if target in ('overlay', 'overview', 'clipboard', 'lock', 'wallpaperSelector', 'settings', 'cheatsheet', 'panelFamily'):
+        if target in ('overlay', 'overview', 'clipboard', 'lock', 'wallpaperSelector', 'settings', 'cheatsheet', 'panelFamily', 'session'):
             return 'iNiR Shell'
         if target == 'altSwitcher':
             return 'Window Switcher'
@@ -329,10 +353,28 @@ def categorize_keybind(kb: dict) -> str:
         return 'Applications'
     
     # Window Management
-    if any(x in comment for x in ['close', 'maximize', 'fullscreen', 'floating', 'consume', 'expel', 'center']):
+    if any(x in comment for x in ['close', 'maximize', 'fullscreen', 'floating', 'consume', 'expel', 'float/tile']):
         return 'Window Management'
     if 'close-window' in action:
         return 'Window Management'
+    
+    # Layout (column/window sizing, presets, tabbed)
+    if any(x in comment for x in ['cycle column', 'cycle window', 'reset window', 'center column', 'center visible', 'expand to available', 'tabbed']):
+        return 'Layout'
+    if any(x in action for x in ['switch-preset-column', 'switch-preset-window', 'reset-window-height', 'center-column', 'center-visible', 'expand-column', 'toggle-column-tabbed']):
+        return 'Layout'
+    
+    # Resize (fine-grained column/window sizing)
+    if any(x in comment for x in ['shrink column', 'grow column', 'shrink window', 'grow window']):
+        return 'Resize'
+    if any(x in action for x in ['set-column-width', 'set-window-height']):
+        return 'Resize'
+    
+    # Monitors (must come before Focus/Move to avoid misclassification)
+    if 'monitor' in comment:
+        return 'Monitors'
+    if any(x in action for x in ['focus-monitor', 'move-column-to-monitor', 'move-window-to-monitor', 'move-workspace-to-monitor']):
+        return 'Monitors'
     
     # Focus
     if 'focus' in comment and 'workspace' not in comment:
@@ -416,8 +458,9 @@ def parse_niri_config(config_path: Path) -> dict:
     
     category_order = [
         'System', 'iNiR Shell', 'Window Switcher', 'Screenshots',
-        'Applications', 'Window Management', 'Focus', 'Move Windows',
-        'Workspaces', 'Media', 'Brightness', 'Other'
+        'Applications', 'Window Management', 'Layout', 'Resize',
+        'Focus', 'Move Windows', 'Monitors', 'Workspaces',
+        'Media', 'Brightness', 'Other'
     ]
     
     children = []

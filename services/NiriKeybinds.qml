@@ -101,7 +101,8 @@ Singleton {
             children: [{ keybinds: [
                 { mods: ["Super"], key: "Tab", comment: "Niri Overview" },
                 { mods: ["Super", "Shift"], key: "E", comment: "Quit Niri" },
-                { mods: ["Super"], key: "Escape", comment: "Toggle shortcuts inhibit" }
+                { mods: ["Super"], key: "Escape", comment: "Toggle shortcuts inhibit" },
+                { mods: ["Super", "Shift"], key: "O", comment: "Power off monitors" }
             ]}]
         },
         {
@@ -114,7 +115,8 @@ Singleton {
                 { mods: ["Super"], key: "Slash", comment: "Cheatsheet" },
                 { mods: ["Super", "Alt"], key: "L", comment: "Lock Screen" },
                 { mods: ["Ctrl", "Alt"], key: "T", comment: "Wallpaper Selector" },
-                { mods: ["Super", "Shift"], key: "W", comment: "Cycle panel style" }
+                { mods: ["Super", "Shift"], key: "W", comment: "Cycle panel style" },
+                { mods: ["Super", "Shift"], key: "Q", comment: "Session dialog" }
             ]}]
         },
         {
@@ -137,7 +139,8 @@ Singleton {
             children: [{ keybinds: [
                 { mods: ["Super"], key: "T", comment: "Terminal" },
                 { mods: ["Super"], key: "Return", comment: "Terminal" },
-                { mods: ["Super"], key: "E", comment: "File manager" }
+                { mods: ["Super"], key: "E", comment: "File manager" },
+                { mods: ["Super"], key: "W", comment: "Browser" }
             ]}]
         },
         {
@@ -146,28 +149,61 @@ Singleton {
                 { mods: ["Super"], key: "Q", comment: "Close window" },
                 { mods: ["Super"], key: "D", comment: "Maximize column" },
                 { mods: ["Super"], key: "F", comment: "Fullscreen" },
-                { mods: ["Super"], key: "A", comment: "Toggle floating" }
+                { mods: ["Super"], key: "A", comment: "Toggle floating" },
+                { mods: ["Super", "Shift"], key: "V", comment: "Switch float/tile focus" },
+                { mods: ["Super"], key: "[", comment: "Consume/expel left" },
+                { mods: ["Super"], key: "]", comment: "Consume/expel right" }
+            ]}]
+        },
+        {
+            name: "Layout",
+            children: [{ keybinds: [
+                { mods: ["Super"], key: "R", comment: "Cycle column width" },
+                { mods: ["Super", "Shift"], key: "R", comment: "Cycle window height" },
+                { mods: ["Super", "Ctrl"], key: "R", comment: "Reset window height" },
+                { mods: ["Super"], key: "C", comment: "Center column" }
+            ]}]
+        },
+        {
+            name: "Resize",
+            children: [{ keybinds: [
+                { mods: ["Super"], key: "-", comment: "Shrink column 10%" },
+                { mods: ["Super"], key: "=", comment: "Grow column 10%" },
+                { mods: ["Super", "Shift"], key: "-", comment: "Shrink window 10%" },
+                { mods: ["Super", "Shift"], key: "=", comment: "Grow window 10%" }
             ]}]
         },
         {
             name: "Focus",
             children: [{ keybinds: [
                 { mods: ["Super"], key: "←/→/↑/↓", comment: "Focus direction" },
-                { mods: ["Super"], key: "H/J/K/L", comment: "Focus (vim)" }
+                { mods: ["Super"], key: "H/J/K/L", comment: "Focus (vim)" },
+                { mods: ["Super"], key: "Home", comment: "Focus first column" },
+                { mods: ["Super"], key: "End", comment: "Focus last column" }
             ]}]
         },
         {
             name: "Move Windows",
             children: [{ keybinds: [
                 { mods: ["Super", "Shift"], key: "←/→/↑/↓", comment: "Move direction" },
-                { mods: ["Super", "Shift"], key: "H/J/K/L", comment: "Move (vim)" }
+                { mods: ["Super", "Shift"], key: "H/J/K/L", comment: "Move (vim)" },
+                { mods: ["Super", "Ctrl"], key: "Home", comment: "Move to first" },
+                { mods: ["Super", "Ctrl"], key: "End", comment: "Move to last" }
+            ]}]
+        },
+        {
+            name: "Monitors",
+            children: [{ keybinds: [
+                { mods: ["Super", "Ctrl"], key: "←/→/↑/↓", comment: "Focus monitor" },
+                { mods: ["Super", "Ctrl", "Shift"], key: "←/→/↑/↓", comment: "Move to monitor" }
             ]}]
         },
         {
             name: "Workspaces",
             children: [{ keybinds: [
                 { mods: ["Super"], key: "1-9", comment: "Focus workspace" },
-                { mods: ["Super", "Shift"], key: "1-5", comment: "Move to workspace" }
+                { mods: ["Super", "Ctrl"], key: "1-9", comment: "Move to workspace" },
+                { mods: ["Super"], key: "PgUp/PgDn", comment: "Workspace up/down" }
             ]}]
         },
         {
@@ -183,7 +219,10 @@ Singleton {
             children: [{ keybinds: [
                 { mods: [], key: "Vol+", comment: "Volume up" },
                 { mods: [], key: "Vol-", comment: "Volume down" },
-                { mods: [], key: "Mute", comment: "Mute audio" }
+                { mods: [], key: "Mute", comment: "Mute audio" },
+                { mods: ["Ctrl", "Super"], key: "Space", comment: "Play/Pause" },
+                { mods: ["Super", "Alt"], key: "N", comment: "Next track" },
+                { mods: ["Super", "Alt"], key: "P", comment: "Previous track" }
             ]}]
         }
     ]
