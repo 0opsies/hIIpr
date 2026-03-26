@@ -9,6 +9,8 @@
 .zed/
 
 # Personal AI/dev tooling and local-only artifacts
+CLAUDE.md
+prompt-framework-opencode.md
 AGENTS.md
 **/AGENTS.md
 agents/
