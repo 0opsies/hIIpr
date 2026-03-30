@@ -202,8 +202,8 @@ detect_running_instance_dir() {
         json_output="$($qs_bin list --all --json 2>/dev/null || true)"
         if [[ -n "$json_output" && "$json_output" != "[]" ]]; then
             running_path="$(printf '%s' "$json_output" | jq -r '
-                [.[] | select(.configPath | endswith("/shell.qml"))]
-                | .[0].configPath // empty
+                [.[] | (.config_path // .configPath // empty) | select(endswith("/shell.qml"))]
+                | .[0] // empty
             ' 2>/dev/null || true)"
         fi
     fi
@@ -234,6 +234,40 @@ apply_shell_scale() {
     # bugs where the compositor surface is larger than the Qt-rendered content area,
     # which causes wallpaper/blur layers to appear smaller than the screen.
     export QT_SCALE_FACTOR=1
+}
+
+apply_qt_runtime_env() {
+    # The shell uses custom QML styling. Inheriting desktop-wide KDE platform/theme
+    # integration loads KF6XmlGui into the Quickshell process and triggers startup
+    # warnings before our own QML initializes.
+    if [[ -n "${INIR_QT_QPA_PLATFORMTHEME+x}" ]]; then
+        export QT_QPA_PLATFORMTHEME="$INIR_QT_QPA_PLATFORMTHEME"
+    else
+        unset QT_QPA_PLATFORMTHEME
+    fi
+
+    if [[ -n "${INIR_QT_STYLE_OVERRIDE+x}" ]]; then
+        export QT_STYLE_OVERRIDE="$INIR_QT_STYLE_OVERRIDE"
+    else
+        unset QT_STYLE_OVERRIDE
+    fi
+}
+
+apply_qt_logging_rules() {
+    local extra_rules="quickshell.dbus.properties=false;qt.qml.settings.warning=false;qt.core.qsettings.warning=false"
+
+    if [[ -z "${QT_LOGGING_RULES:-}" ]]; then
+        export QT_LOGGING_RULES="$extra_rules"
+        return
+    fi
+
+    case ";${QT_LOGGING_RULES};" in
+        *";qt.core.qsettings.warning=false;"*)
+            ;;
+        *)
+            export QT_LOGGING_RULES="${QT_LOGGING_RULES};${extra_rules}"
+            ;;
+    esac
 }
 
 resolve_config_dir() {
@@ -275,6 +309,38 @@ has_instances() {
     local output
     output="$(list_instances "$1")"
     [[ -n "$output" && "$output" != No\ running\ instances* ]]
+}
+
+ensure_running_instance() {
+    local dir="$1"
+
+    if has_instances "$dir"; then
+        return 0
+    fi
+
+    apply_shell_scale
+    apply_qt_runtime_env
+    apply_qt_logging_rules
+    check_qs_abi
+    start_background "$dir"
+    wait_for_start "$dir"
+}
+
+ensure_running_instance_for_ipc() {
+    local dir="$1"
+    local function_name="${2:-}"
+
+    if has_instances "$dir"; then
+        return 0
+    fi
+
+    case "$function_name" in
+        close|hide|deactivate|dismiss)
+            return 0
+            ;;
+    esac
+
+    ensure_running_instance "$dir"
 }
 
 wait_for_start() {
@@ -405,13 +471,9 @@ restart_shell() {
 open_settings() {
     local dir="$1"
 
-    if ! has_instances "$dir"; then
-        apply_shell_scale
-        start_background "$dir"
-        if ! wait_for_start "$dir"; then
-            echo "Timed out waiting for iNiR to start" >&2
-            exit 1
-        fi
+    if ! ensure_running_instance "$dir"; then
+        echo "Timed out waiting for iNiR to start" >&2
+        exit 1
     fi
 
     exec "$qs_bin" -p "$dir" ipc call settings open
@@ -438,6 +500,8 @@ open_detached_qml_window() {
         fi
     fi
 
+    apply_qt_runtime_env
+    apply_qt_logging_rules
     exec "$qs_bin" -n -p "$qml_path"
 }
 
@@ -863,6 +927,10 @@ run_ipc_target_command() {
     fi
 
     resolve_config_dir
+    if ! ensure_running_instance_for_ipc "$config_dir" "${1:-}"; then
+        echo "Timed out waiting for iNiR to start" >&2
+        exit 1
+    fi
     exec "$qs_bin" -p "$config_dir" ipc call "$target" "$@"
 }
 
@@ -935,6 +1003,7 @@ case "$command_name" in
         done
         resolve_config_dir
         apply_shell_scale
+        apply_qt_runtime_env
         check_qs_abi
         if has_instances "$config_dir"; then
             echo "iNiR is already running. Use 'inir restart' to restart." >&2
@@ -990,6 +1059,8 @@ case "$command_name" in
         done
         resolve_config_dir
         apply_shell_scale
+        apply_qt_runtime_env
+        apply_qt_logging_rules
         check_qs_abi
         if [[ "$foreground" == true ]]; then
             # Run with a restart loop so hot-reload failures don't kill the session.
@@ -1038,6 +1109,8 @@ case "$command_name" in
         done
         resolve_config_dir
         apply_shell_scale
+        apply_qt_runtime_env
+        apply_qt_logging_rules
         check_qs_abi
         restart_shell "$config_dir"
         ;;
@@ -1158,6 +1231,10 @@ case "$command_name" in
             exit 1
         fi
         resolve_config_dir
+        if ! ensure_running_instance_for_ipc "$config_dir" "${2:-}"; then
+            echo "Timed out waiting for iNiR to start" >&2
+            exit 1
+        fi
         exec "$qs_bin" -p "$config_dir" ipc call "$@"
         ;;
     settings|open)

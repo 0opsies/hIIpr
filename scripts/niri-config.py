@@ -212,7 +212,9 @@ def cmd_apply_output(args):
         results.append({"key": key, "value": value, "success": rc == 0, "output": out})
 
     print(json.dumps({"results": results}))
-    return 0
+    # Return non-zero if any individual apply step failed
+    any_failed = any(not r.get("success", True) for r in results)
+    return 1 if any_failed else 0
 
 
 def cmd_persist_output(args):
