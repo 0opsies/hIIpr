@@ -102,7 +102,7 @@ Scope {
         { pageIndex: 4, pageName: overlayPages[4].name, section: Translation.tr("Global Style"), label: Translation.tr("Material"), description: Translation.tr("Material Design solid backgrounds"), keywords: ["material", "solid", "style", "default", "google"] },
         { pageIndex: 4, pageName: overlayPages[4].name, section: Translation.tr("Global Style"), label: Translation.tr("Cards"), description: Translation.tr("Card-style elevated containers"), keywords: ["cards", "card", "style", "elevated", "shadow"] },
         { pageIndex: 4, pageName: overlayPages[4].name, section: Translation.tr("Theme Presets"), label: Translation.tr("Theme Presets"), description: Translation.tr("Predefined color themes like Gruvbox, Catppuccin, Nord, Dracula"), keywords: ["theme", "preset", "gruvbox", "catppuccin", "nord", "dracula", "material", "colors", "palette", "monokai", "solarized", "tokyo", "night", "everforest", "rose", "pine"] },
-        { pageIndex: 4, pageName: overlayPages[4].name, section: Translation.tr("Auto Theme"), label: Translation.tr("Auto Theme"), description: Translation.tr("Automatic colors from wallpaper"), keywords: ["auto", "wallpaper", "dynamic", "colors", "matugen", "generate"] },
+        { pageIndex: 4, pageName: overlayPages[4].name, section: Translation.tr("Auto Theme"), label: Translation.tr("Auto Theme"), description: Translation.tr("Automatic colors from wallpaper"), keywords: ["auto", "wallpaper", "dynamic", "colors", "material you", "generate"] },
         { pageIndex: 4, pageName: overlayPages[4].name, section: Translation.tr("Custom Theme"), label: Translation.tr("Custom Theme Editor"), description: Translation.tr("Create and edit custom color themes"), keywords: ["custom", "theme", "editor", "color", "create", "edit", "picker"] },
         { pageIndex: 4, pageName: overlayPages[4].name, section: Translation.tr("Typography"), label: Translation.tr("Font settings"), description: Translation.tr("Main font, title font, monospace font and size"), keywords: ["font", "typography", "size", "family", "main", "title", "monospace", "scale"] },
         { pageIndex: 4, pageName: overlayPages[4].name, section: Translation.tr("Typography"), label: Translation.tr("Font sync"), description: Translation.tr("Sync fonts with GTK/KDE system apps"), keywords: ["font", "sync", "gtk", "kde", "system", "apps"] },
@@ -147,7 +147,7 @@ Scope {
         { pageIndex: 0, pageName: overlayPages[0].name, section: Translation.tr("GameMode"), label: Translation.tr("GameMode"), description: Translation.tr("Auto-detect fullscreen games and reduce effects"), keywords: ["game", "mode", "fullscreen", "performance", "fps", "auto", "detect", "animations", "effects"] },
         { pageIndex: 7, pageName: overlayPages[7].name, section: Translation.tr("Applications"), label: Translation.tr("Default applications"), description: Translation.tr("Terminal, browser, network and account commands"), keywords: ["apps", "applications", "terminal", "browser", "network", "bluetooth", "account", "default"] },
         // Advanced (page 8)
-        { pageIndex: 8, pageName: overlayPages[8].name, section: Translation.tr("Color generation"), label: Translation.tr("Color generation"), description: Translation.tr("Wallpaper-based color theming and palette type"), keywords: ["color", "generation", "theming", "wallpaper", "matugen", "palette"] },
+        { pageIndex: 8, pageName: overlayPages[8].name, section: Translation.tr("Color generation"), label: Translation.tr("Color generation"), description: Translation.tr("Wallpaper-based color theming and palette type"), keywords: ["color", "generation", "theming", "wallpaper", "material you", "palette"] },
         { pageIndex: 8, pageName: overlayPages[8].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal saturation"), description: Translation.tr("Saturation intensity of terminal colors from wallpaper"), keywords: ["terminal", "color", "saturation", "vivid", "muted", "intensity"] },
         { pageIndex: 8, pageName: overlayPages[8].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal brightness"), description: Translation.tr("Brightness/lightness of terminal colors from wallpaper"), keywords: ["terminal", "color", "brightness", "lightness", "dark", "light"] },
         { pageIndex: 8, pageName: overlayPages[8].name, section: Translation.tr("Color generation"), label: Translation.tr("Terminal harmony"), description: Translation.tr("How much to blend terminal colors with the wallpaper palette"), keywords: ["terminal", "color", "harmony", "blend", "palette", "wallpaper"] },
@@ -687,29 +687,38 @@ Scope {
                                 anchors.centerIn: parent
                                 width: 34
                                 height: 34
-                                source: Directories.userAvatarSourcePrimary
+                                source: overlayAvatarResolver.resolvedSource
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
                                 cache: true
                                 smooth: true
                                 mipmap: true
-                                visible: false
-                                onStatusChanged: {
-                                    if (status === Image.Error) {
-                                        const nextSource = Directories.nextAvatarSource(source)
-                                        if (nextSource.length > 0 && nextSource !== source)
-                                            source = nextSource
-                                    }
+                                sourceSize.width: 68
+                                sourceSize.height: 68
+                                visible: status === Image.Ready
+                                layer.enabled: visible
+                                layer.effect: OpacityMask {
+                                    maskSource: overlayAvatarMask
                                 }
                             }
 
-                            OpacityMask {
-                                anchors.centerIn: parent
-                                width: 34
-                                height: 34
-                                source: overlayAvatarImage
-                                maskSource: overlayAvatarMask
-                                visible: overlayAvatarImage.status === Image.Ready
+                            // Reactive avatar resolver — retries fallback paths without breaking bindings
+                            QtObject {
+                                id: overlayAvatarResolver
+                                property int avatarIndex: 0
+                                readonly property string resolvedSource: Directories.avatarSourceAt(avatarIndex)
+
+                                readonly property string primaryWatch: Directories.userAvatarSourcePrimary
+                                onPrimaryWatchChanged: avatarIndex = 0
+
+                                readonly property int imgStatus: overlayAvatarImage.status
+                                onImgStatusChanged: {
+                                    if (imgStatus === Image.Error) {
+                                        const nextIdx = avatarIndex + 1
+                                        if (nextIdx < Directories.userAvatarPaths.length)
+                                            avatarIndex = nextIdx
+                                    }
+                                }
                             }
 
                             MaterialSymbol {
