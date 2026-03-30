@@ -2,7 +2,7 @@ import qs
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
+import Qt5Compat.GraphicalEffects as GE
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
@@ -611,7 +611,7 @@ Scope {
 
                 // Shadow - hidden in aurora/angel (angel uses StyledRectangularShadow)
                 layer.enabled: Appearance.effectsEnabled && !Appearance.auroraEverywhere
-                layer.effect: DropShadow {
+                layer.effect: GE.DropShadow {
                     color: Appearance.colors.colShadow
                     radius: 24
                     samples: 25
@@ -687,36 +687,22 @@ Scope {
                                 anchors.centerIn: parent
                                 width: 34
                                 height: 34
-                                source: overlayAvatarResolver.resolvedSource
+                                source: Directories.userAvatarSourcePrimary
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
                                 cache: true
                                 smooth: true
                                 mipmap: true
-                                sourceSize.width: 68
-                                sourceSize.height: 68
                                 visible: status === Image.Ready
                                 layer.enabled: visible
-                                layer.effect: OpacityMask {
+                                layer.effect: GE.OpacityMask {
                                     maskSource: overlayAvatarMask
                                 }
-                            }
-
-                            // Reactive avatar resolver — retries fallback paths without breaking bindings
-                            QtObject {
-                                id: overlayAvatarResolver
-                                property int avatarIndex: 0
-                                readonly property string resolvedSource: Directories.avatarSourceAt(avatarIndex)
-
-                                readonly property string primaryWatch: Directories.userAvatarSourcePrimary
-                                onPrimaryWatchChanged: avatarIndex = 0
-
-                                readonly property int imgStatus: overlayAvatarImage.status
-                                onImgStatusChanged: {
-                                    if (imgStatus === Image.Error) {
-                                        const nextIdx = avatarIndex + 1
-                                        if (nextIdx < Directories.userAvatarPaths.length)
-                                            avatarIndex = nextIdx
+                                onStatusChanged: {
+                                    if (status === Image.Error) {
+                                        const nextSource = Directories.nextAvatarSource(source)
+                                        if (nextSource.length > 0 && nextSource !== source)
+                                            source = nextSource
                                     }
                                 }
                             }
@@ -1334,7 +1320,7 @@ Scope {
                             : Appearance.m3colors.m3outlineVariant
 
                         layer.enabled: Appearance.effectsEnabled && !Appearance.auroraEverywhere
-                        layer.effect: DropShadow {
+                        layer.effect: GE.DropShadow {
                             color: Qt.rgba(0, 0, 0, 0.3)
                             radius: 12
                             samples: 13
