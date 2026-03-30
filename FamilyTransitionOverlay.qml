@@ -41,6 +41,22 @@ Scope {
     property real _bgScale: 1.05
     property real _blurAmount: 0
 
+    // ── Color snapshot (frozen at transition start) ─────────────────────
+    // Prevents palette shifts from affecting the overlay mid-animation.
+    // Material transition colors
+    property color _snapPrimaryContainer: "transparent"
+    property color _snapPrimary: "transparent"
+    property color _snapOnPrimaryContainer: "transparent"
+    property color _snapBackground: "transparent"
+    property color _snapOnSurface: "transparent"
+    property bool _snapDarkmode: true
+    // Waffle transition colors
+    property color _snapWaffleBg0: "transparent"
+    property color _snapWaffleBg1: "transparent"
+    property color _snapWaffleFg: "transparent"
+    property color _snapWaffleSubfg: "transparent"
+    property color _snapWaffleAccent: "transparent"
+
     // ════════════════════════════════════════════════════════════════════
     // TRIGGER
     // ════════════════════════════════════════════════════════════════════
@@ -56,6 +72,20 @@ Scope {
             root._isWaffle = GlobalStates.familyTransitionDirection === "left"
             root._phase = false
             root._active = true
+
+            // Snapshot colors at transition start so palette changes
+            // during animation don't cause color flicker.
+            root._snapPrimaryContainer = Appearance.colors.colPrimaryContainer
+            root._snapPrimary = Appearance.colors.colPrimary
+            root._snapOnPrimaryContainer = Appearance.colors.colOnPrimaryContainer
+            root._snapBackground = Appearance.m3colors.m3background
+            root._snapOnSurface = Appearance.m3colors.m3onSurface
+            root._snapDarkmode = Appearance.m3colors.darkmode
+            root._snapWaffleBg0 = Looks.colors.bg0
+            root._snapWaffleBg1 = Looks.colors.bg1
+            root._snapWaffleFg = Looks.colors.fg
+            root._snapWaffleSubfg = Looks.colors.subfg
+            root._snapWaffleAccent = Looks.colors.accent
 
             // Reset to pre-entry state
             root._overlayOpacity = 0
@@ -184,7 +214,7 @@ Scope {
                 // Solid fallback behind the blur (visible while image loads)
                 Rectangle {
                     anchors.fill: parent
-                    color: root._isWaffle ? Looks.colors.bg0 : Appearance.m3colors.m3background
+                    color: root._isWaffle ? root._snapWaffleBg0 : root._snapBackground
                 }
 
                 // ── Blurred wallpaper with cinematic zoom ──
@@ -230,7 +260,7 @@ Scope {
                     // Tint overlay — Material gets a subtle colored scrim, Waffle stays clean
                     Rectangle {
                         anchors.fill: parent
-                        color: Appearance.m3colors.m3background
+                        color: root._snapBackground
                         opacity: root._isWaffle ? 0.08 : 0.28
                     }
                 }
