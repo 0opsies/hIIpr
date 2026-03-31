@@ -7,7 +7,10 @@ CACHE_DIR="$XDG_CACHE_HOME/quickshell"
 STATE_DIR="$XDG_STATE_HOME/quickshell"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_ROOT="$(cd "$SCRIPT_DIR/../.." 2>/dev/null && pwd)"
-SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
+
+# shellcheck source=scripts/lib/config-path.sh
+source "$SCRIPT_DIR/../lib/config-path.sh"
+SHELL_CONFIG_FILE="$(inir_config_file)"
 TEMPLATE_DIR="$XDG_CONFIG_HOME/matugen"
 terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
 
@@ -128,7 +131,8 @@ check_and_prompt_upscale() {
     local img="$1"
 
     # Check if upscale notifications are disabled in config
-    local config_file="${XDG_CONFIG_HOME:-$HOME/.config}/illogical-impulse/config.json"
+    local config_file
+    config_file="$(inir_config_file)"
     if [[ -f "$config_file" ]] && command -v jq &>/dev/null; then
         local hide_upscale
         hide_upscale=$(jq -r '.background.hideUpscaleNotification // false' "$config_file" 2>/dev/null)

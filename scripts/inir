@@ -14,6 +14,30 @@ systemd_user_dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 launcher_root="$(cd -- "$script_dir/.." 2>/dev/null && pwd || printf '%s' "$script_dir")"
 
+source_config_path_helper() {
+    local helper_candidates=(
+        "$script_dir/lib/config-path.sh"
+        "$launcher_root/share/quickshell/inir/scripts/lib/config-path.sh"
+        "$user_config_dir/scripts/lib/config-path.sh"
+        "$system_config_dir/scripts/lib/config-path.sh"
+        "$fallback_system_config_dir/scripts/lib/config-path.sh"
+    )
+
+    local helper_path
+    for helper_path in "${helper_candidates[@]}"; do
+        if [[ -f "$helper_path" ]]; then
+            # shellcheck source=/dev/null
+            source "$helper_path"
+            return
+        fi
+    done
+
+    echo "Unable to locate config-path helper (scripts/lib/config-path.sh)." >&2
+    exit 1
+}
+
+source_config_path_helper
+
 usage() {
     cat <<'EOF'
 Usage: inir <command> [options]
@@ -523,7 +547,8 @@ resolve_setup_dir() {
         return
     fi
 
-    local version_file="${XDG_CONFIG_HOME:-$HOME/.config}/illogical-impulse/version.json"
+    local version_file
+    version_file="$(inir_version_file)"
     local stored_repo=""
     if [[ -f "$version_file" ]]; then
         if command -v jq >/dev/null 2>&1; then
@@ -802,7 +827,8 @@ show_version() {
     fi
 
     local runtime_version_file=""
-    local local_version_file="${XDG_CONFIG_HOME:-$HOME/.config}/illogical-impulse/version.json"
+    local local_version_file
+    local_version_file="$(inir_version_file)"
     local version_file=""
 
     if [[ -n "$runtime_path" ]]; then
@@ -947,7 +973,8 @@ run_ipc_target_command() {
 }
 
 launch_configured_browser() {
-    local config_file="${XDG_CONFIG_HOME:-$HOME/.config}/illogical-impulse/config.json"
+    local config_file
+    config_file="$(inir_config_file)"
     local browser=""
 
     if [[ -f "$config_file" ]]; then

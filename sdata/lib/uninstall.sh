@@ -4,6 +4,8 @@
 
 # shellcheck shell=bash
 
+INIR_CONFIG_DIR="${DOTS_CORE_CONFDIR:-${XDG_CONFIG_HOME}/illogical-impulse}"
+
 ###############################################################################
 # Configuration - What iNiR installs/manages
 ###############################################################################
@@ -16,7 +18,7 @@
 # iNiR-exclusive files (safe to remove)
 declare -A INIR_ONLY_PATHS=(
     ["${XDG_CONFIG_HOME}/quickshell/inir"]="iNiR shell configuration"
-    ["${XDG_CONFIG_HOME}/illogical-impulse"]="iNiR user preferences"
+    ["${INIR_CONFIG_DIR}"]="iNiR user preferences"
     ["${XDG_STATE_HOME}/quickshell/user"]="iNiR state (notifications, todo)"
     ["${XDG_CACHE_HOME}/quickshell/inir"]="iNiR cache"
     ["${XDG_BIN_HOME}/inir"]="iNiR launcher"
@@ -138,7 +140,7 @@ niri_config_has_user_customizations() {
     done
     
     # Check if file was modified after iNiR install
-    local install_marker="${XDG_CONFIG_HOME}/illogical-impulse/installed_true"
+    local install_marker="${INIR_CONFIG_DIR}/installed_true"
     if [[ -f "$install_marker" && -f "$config" ]]; then
         [[ "$config" -nt "$install_marker" ]] && return 0
     fi
@@ -291,8 +293,8 @@ uninstall_create_backup() {
         cp -r "${XDG_CONFIG_HOME}/quickshell/inir" "$backup_dir/quickshell-inir"
     fi
 
-    if [[ -d "${XDG_CONFIG_HOME}/illogical-impulse" ]]; then
-        cp -r "${XDG_CONFIG_HOME}/illogical-impulse" "$backup_dir/illogical-impulse"
+    if [[ -d "${INIR_CONFIG_DIR}" ]]; then
+        cp -r "${INIR_CONFIG_DIR}" "$backup_dir/$(basename "$INIR_CONFIG_DIR")"
     fi
 
     # Backup niri config
@@ -799,9 +801,9 @@ run_uninstall() {
     fi
 
     # Check if installed
-    if [[ ! -f "${XDG_CONFIG_HOME}/illogical-impulse/installed_true" ]] && \
+    if [[ ! -f "${INIR_CONFIG_DIR}/installed_true" ]] && \
        [[ ! -d "${XDG_CONFIG_HOME}/quickshell/inir" ]] && \
-       [[ ! -f "${XDG_CONFIG_HOME}/illogical-impulse/version.json" ]] && \
+       [[ ! -f "${INIR_CONFIG_DIR}/version.json" ]] && \
        [[ ! -f "${XDG_BIN_HOME}/inir" ]]; then
         tui_warn "iNiR does not appear to be installed"
         return 1

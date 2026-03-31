@@ -526,11 +526,11 @@ fi
 
 # illogical-impulse config.json (use defaults for distribution)
 if [[ -f "defaults/config.json" ]]; then
-  v mkdir -p "${XDG_CONFIG_HOME}/illogical-impulse"
-  install_file__auto_backup "defaults/config.json" "${XDG_CONFIG_HOME}/illogical-impulse/config.json"
+  v mkdir -p "${DOTS_CORE_CONFDIR}"
+  install_file__auto_backup "defaults/config.json" "${DOTS_CORE_CONFDIR}/config.json"
 elif [[ -f "dots/.config/illogical-impulse/config.json" ]]; then
   # Fallback to dots (legacy)
-  install_file__auto_backup "dots/.config/illogical-impulse/config.json" "${XDG_CONFIG_HOME}/illogical-impulse/config.json"
+  install_file__auto_backup "dots/.config/illogical-impulse/config.json" "${DOTS_CORE_CONFDIR}/config.json"
 fi
 
 # DISABLED: WebApp plugins — requires quickshell-webengine rebuild, re-enable when ready
@@ -852,11 +852,12 @@ if [[ "${INSTALL_FIRSTRUN}" == true && -n "${DEFAULT_WALLPAPER}" && -f "${DEFAUL
   mkdir -p "${XDG_CONFIG_HOME}/fuzzel"
 
   # Update config.json with default wallpaper path
-  if [[ -f "${XDG_CONFIG_HOME}/illogical-impulse/config.json" ]]; then
+  shell_config_json="${DOTS_CORE_CONFDIR}/config.json"
+  if [[ -f "$shell_config_json" ]]; then
     if command -v jq >/dev/null 2>&1; then
       jq --arg path "${DEFAULT_WALLPAPER}" '.background.wallpaperPath = $path' \
-        "${XDG_CONFIG_HOME}/illogical-impulse/config.json" > "${XDG_CONFIG_HOME}/illogical-impulse/config.json.tmp" \
-        && mv "${XDG_CONFIG_HOME}/illogical-impulse/config.json.tmp" "${XDG_CONFIG_HOME}/illogical-impulse/config.json"
+        "$shell_config_json" > "${shell_config_json}.tmp" \
+        && mv "${shell_config_json}.tmp" "$shell_config_json"
       log_success "Default wallpaper configured"
     fi
   fi
@@ -994,7 +995,7 @@ if ! ${quiet:-false}; then
   echo ""
   for _cfg_path \
     in "${XDG_CONFIG_HOME}/niri/config.kdl:Niri config" \
-       "${XDG_CONFIG_HOME}/illogical-impulse/config.json:iNiR config" \
+       "${DOTS_CORE_CONFDIR}/config.json:iNiR config" \
        "${XDG_CONFIG_HOME}/matugen:Theming templates" \
        "${XDG_CONFIG_HOME}/fuzzel:Fuzzel config" \
        "${XDG_STATE_HOME}/quickshell/user/generated/colors.json:Theme colors"; do

@@ -261,7 +261,7 @@ check_script_permissions() {
 }
 
 check_user_config() {
-    local config="${XDG_CONFIG_HOME}/illogical-impulse/config.json"
+    local config="${DOTS_CORE_CONFDIR}/config.json"
     
     if [[ ! -f "$config" ]]; then
         doctor_pass "User config (using defaults)"
@@ -277,7 +277,7 @@ check_user_config() {
 }
 
 check_state_directories() {
-    local dirs=("${XDG_STATE_HOME}/quickshell/user" "${XDG_CACHE_HOME}/quickshell" "${XDG_CONFIG_HOME}/illogical-impulse")
+    local dirs=("${XDG_STATE_HOME}/quickshell/user" "${XDG_CACHE_HOME}/quickshell" "${DOTS_CORE_CONFDIR}")
     local created=0
     
     for dir in "${dirs[@]}"; do
@@ -584,10 +584,17 @@ check_niri_running() {
 }
 
 check_version_tracking() {
-    local version_file="${XDG_CONFIG_HOME}/illogical-impulse/version.json"
+    local version_file="${DOTS_CORE_CONFDIR}/version.json"
+    local legacy_version_file="${XDG_CONFIG_HOME}/illogical-impulse/version.json"
     local runtime_version_file
-    local installed_marker="${XDG_CONFIG_HOME}/illogical-impulse/installed_true"
+    local installed_marker="${DOTS_CORE_CONFDIR}/installed_true"
     runtime_version_file="$(get_runtime_version_file)"
+
+    if [[ ! -f "$version_file" && -f "$legacy_version_file" ]]; then
+        mkdir -p "${DOTS_CORE_CONFDIR}"
+        cp "$legacy_version_file" "$version_file"
+        doctor_fix "Migrated version tracking to active config directory"
+    fi
     
     if [[ -f "$installed_marker" && ! -f "$version_file" ]]; then
         if [[ -f "$runtime_version_file" ]]; then
@@ -614,7 +621,7 @@ check_manifest() {
         return 0
     fi
     local manifest="${target}/.inir-manifest"
-    local installed_marker="${XDG_CONFIG_HOME}/illogical-impulse/installed_true"
+    local installed_marker="${DOTS_CORE_CONFDIR}/installed_true"
     local installed_strategy
     installed_strategy=$(get_installed_update_strategy)
 
@@ -853,7 +860,7 @@ check_matugen_colors() {
         # Try to auto-generate from current wallpaper
         local wallpaper=""
         local wallpaper_source="configured wallpaper"
-        local config="${XDG_CONFIG_HOME}/illogical-impulse/config.json"
+        local config="${DOTS_CORE_CONFDIR}/config.json"
         if [[ -f "$config" ]] && command -v jq &>/dev/null; then
             wallpaper=$(jq -r '.background.wallpaperPath // empty' "$config" 2>/dev/null)
         fi

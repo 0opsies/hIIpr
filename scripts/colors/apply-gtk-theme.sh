@@ -17,8 +17,11 @@ PALETTE_JSON="$XDG_STATE_HOME/quickshell/user/generated/palette.json"
 COLORS_JSON="$XDG_STATE_HOME/quickshell/user/generated/colors.json"
 KDEGLOBALS="$HOME/.config/kdeglobals"
 DARKLY_COLORS="$XDG_DATA_HOME/color-schemes/Darkly.colors"
-SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=scripts/lib/config-path.sh
+source "$SCRIPT_DIR/../lib/config-path.sh"
+SHELL_CONFIG_FILE="$(inir_config_file)"
 
 # Read config options
 enable_apps_shell="true"
