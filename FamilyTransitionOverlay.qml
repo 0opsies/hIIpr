@@ -316,9 +316,9 @@ Scope {
                 width: 260
                 height: 180
                 radius: Looks.radius.xLarge
-                color: ColorUtils.transparentize(Looks.colors.bg1, 0.15)
+                color: ColorUtils.transparentize(root._snapWaffleBg1, 0.15)
                 border.width: 1
-                border.color: ColorUtils.transparentize(Looks.colors.fg, 0.9)
+                border.color: ColorUtils.transparentize(root._snapWaffleFg, 0.9)
 
                 opacity: root._phase ? 0 : (waffleRoot.expanded ? 1 : 0)
                 scale: root._phase ? 0.92 : (waffleRoot.expanded ? 1 : 0.82)
@@ -350,7 +350,7 @@ Scope {
                     width: waffleRoot.showAccent && !root._phase ? 48 : 0
                     height: 2.5
                     radius: 1.25
-                    color: Looks.colors.accent
+                    color: root._snapWaffleAccent
                     opacity: root._phase ? 0 : 1
 
                     Behavior on width {
@@ -393,7 +393,7 @@ Scope {
                 layer.enabled: Appearance.effectsEnabled
                 layer.effect: MultiEffect {
                     colorization: 1.0
-                    colorizationColor: Looks.colors.fg
+                    colorizationColor: root._snapWaffleFg
                 }
             }
 
@@ -426,7 +426,7 @@ Scope {
                     font.pixelSize: 19
                     font.family: Looks.font.family.ui
                     font.weight: Font.DemiBold
-                    color: Looks.colors.fg
+                    color: root._snapWaffleFg
                 }
 
                 Text {
@@ -434,7 +434,7 @@ Scope {
                     text: "Windows 11 Style"
                     font.pixelSize: Looks.font.pixelSize.small
                     font.family: Looks.font.family.ui
-                    color: Looks.colors.subfg
+                    color: root._snapWaffleSubfg
                 }
             }
         }
@@ -471,7 +471,7 @@ Scope {
                 width: materialRoot.expanded && !root._phase ? materialRoot.maxRadius * 2 : 0
                 height: width
                 radius: width / 2
-                color: ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 0.45)
+                color: ColorUtils.transparentize(root._snapPrimaryContainer, 0.45)
                 opacity: root._phase ? 0 : 1
 
                 Behavior on width {
@@ -499,7 +499,7 @@ Scope {
                 radius: width / 2
                 color: "transparent"
                 border.width: 1.5
-                border.color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.78)
+                border.color: ColorUtils.transparentize(root._snapPrimary, 0.78)
                 opacity: root._phase ? 0 : 1
 
                 Behavior on width {
@@ -522,7 +522,7 @@ Scope {
                 width: 60
                 height: 60
                 radius: 30
-                color: Appearance.colors.colPrimaryContainer
+                color: root._snapPrimaryContainer
 
                 opacity: root._phase ? 0 : (materialRoot.showBadge ? 1 : 0)
                 scale: root._phase ? 0.85 : (materialRoot.showBadge ? 1 : 0.6)
@@ -557,8 +557,8 @@ Scope {
                     layer.effect: MultiEffect {
                         colorization: 1.0
                         colorizationColor: {
-                            const c = Appearance.colors.colOnPrimaryContainer
-                            return ColorUtils.hslLightness(c) < 0.2 ? Appearance.colors.colPrimary : c
+                            const c = root._snapOnPrimaryContainer
+                            return ColorUtils.hslLightness(c) < 0.2 ? root._snapPrimary : c
                         }
                     }
                 }
@@ -592,15 +592,15 @@ Scope {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Material ii"
-                    font.pixelSize: Appearance.font.pixelSize.title
-                    font.family: Appearance.font.family.title
-                    font.weight: Font.Medium
-                    color: Appearance.m3colors.m3onSurface
+                    font.pixelSize: Appearance.font.pixelSize.larger
+                    font.family: Appearance.font.family.main
+                    font.weight: Font.Normal
+                    color: root._snapOnSurface
 
                     layer.enabled: Appearance.effectsEnabled
                     layer.effect: MultiEffect {
                         shadowEnabled: true
-                        shadowColor: Appearance.m3colors.darkmode ? "#40000000" : "#40FFFFFF"
+                        shadowColor: root._snapDarkmode ? "#40000000" : "#40FFFFFF"
                         shadowBlur: 0.6
                         shadowVerticalOffset: 1
                     }
@@ -611,13 +611,14 @@ Scope {
                     text: "Material Design"
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.family: Appearance.font.family.main
-                    color: Appearance.m3colors.m3onSurface
-                    opacity: 0.65
+                    font.weight: Font.Light
+                    color: root._snapOnSurface
+                    opacity: 0.55
 
                     layer.enabled: Appearance.effectsEnabled
                     layer.effect: MultiEffect {
                         shadowEnabled: true
-                        shadowColor: Appearance.m3colors.darkmode ? "#30000000" : "#30FFFFFF"
+                        shadowColor: root._snapDarkmode ? "#30000000" : "#30FFFFFF"
                         shadowBlur: 0.4
                         shadowVerticalOffset: 1
                     }
