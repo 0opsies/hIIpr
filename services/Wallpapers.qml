@@ -29,8 +29,8 @@ Singleton {
     // Wallpaper path resolution for aurora/backdrop
     readonly property bool isWaffleFamily: (Config.options?.panelFamily ?? "ii") === "waffle"
     readonly property bool useBackdropWallpaper: isWaffleFamily
-        ? (Config.options?.waffles?.background?.backdrop?.hideWallpaper ?? false)
-        : (Config.options?.background?.backdrop?.hideWallpaper ?? false)
+        ? ((Config.options?.waffles?.background?.backdrop?.enable ?? false) && (Config.options?.waffles?.background?.backdrop?.hideWallpaper ?? false))
+        : ((Config.options?.background?.backdrop?.enable ?? false) && (Config.options?.background?.backdrop?.hideWallpaper ?? false))
 
     // Resolve the "main" wallpaper path — multi-monitor aware
     // When multi-monitor is enabled, uses the focused monitor's wallpaper

@@ -36,8 +36,8 @@ Singleton {
     readonly property bool animationEnabled: Config.options?.background?.enableAnimation ?? true
     readonly property string panelFamily: Config.options?.panelFamily ?? "ii"
     readonly property bool hideMainWallpaper: panelFamily === "waffle"
-        ? (Config.options?.waffles?.background?.backdrop?.hideWallpaper ?? false)
-        : (Config.options?.background?.backdrop?.hideWallpaper ?? false)
+        ? ((Config.options?.waffles?.background?.backdrop?.enable ?? false) && (Config.options?.waffles?.background?.backdrop?.hideWallpaper ?? false))
+        : ((Config.options?.background?.backdrop?.enable ?? false) && (Config.options?.background?.backdrop?.hideWallpaper ?? false))
     readonly property bool waffleUsesMainWallpaper: Config.options?.waffles?.background?.useMainWallpaper ?? true
     readonly property string waffleWallpaperPath: Config.options?.waffles?.background?.wallpaperPath ?? ""
     readonly property bool multiMonitorEnabled: WallpaperListener.multiMonitorEnabled

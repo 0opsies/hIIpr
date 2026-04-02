@@ -122,7 +122,7 @@ Variants {
         readonly property bool pauseParallaxDuringTransitions: bgRoot.parallaxOptions.pauseDuringTransitions ?? true
         readonly property int parallaxTransitionSettleMs: ParallaxMath.resolveTransitionSettle(bgRoot.parallaxOptions, 220)
         readonly property bool externalMainWallpaperEligible: !wallpaperSafetyTriggered
-            && !(bgRoot.backgroundOptions.backdrop?.hideWallpaper ?? false)
+            && !((bgRoot.backgroundOptions.backdrop?.enable ?? false) && (bgRoot.backgroundOptions.backdrop?.hideWallpaper ?? false))
             && AwwwBackend.supportsVisibleMainWallpaper(
                 bgRoot.wallpaperPathRaw,
                 bgRoot.fillMode,
@@ -150,7 +150,7 @@ Variants {
         readonly property bool verticalParallax: bgRoot.parallaxAxis === "vertical"
         
         // Backdrop mode
-        readonly property bool backdropActive: bgRoot.backgroundOptions.backdrop?.hideWallpaper ?? false
+        readonly property bool backdropActive: (bgRoot.backgroundOptions.backdrop?.enable ?? false) && (bgRoot.backgroundOptions.backdrop?.hideWallpaper ?? false)
 
         // awww reveal: when parallax is active and awww handles wallpaper,
         // instantly hide crossfader, let awww transition play, then fade back in.
