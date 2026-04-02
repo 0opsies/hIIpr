@@ -17,6 +17,7 @@ MouseArea {
     property bool loginInProgress: false
     property bool loginFailed: false
     property bool keyboardOpen: false
+    property bool sessionPopupOpen: false
     property string currentView: "clock"
     property bool showLoginView: currentView === "login"
 
@@ -463,39 +464,130 @@ MouseArea {
         LockIconButton { icon: "restart_alt";        tooltip: "Restart";    enabled: sddm.canReboot;   onClicked: sddm.reboot() }
     }
 
-    // ── BOTTOM-LEFT: session selector (ALWAYS visible, outside loginView) ────
+    // ── BOTTOM-LEFT: session selector with popup ──────────────────────────────
+
+    // Dismiss overlay — closes popup when clicking outside
     MouseArea {
+        anchors.fill: parent; visible: root.sessionPopupOpen
+        z: 14; enabled: root.sessionPopupOpen
+        onClicked: root.sessionPopupOpen = false
+    }
+
+    // Trigger button
+    MouseArea {
+        id: sessionTrigger
         anchors.bottom: parent.bottom; anchors.left: parent.left
         anchors.bottomMargin: 24; anchors.leftMargin: 24
-        visible: sessionModel.count > 0; z: 10
+        visible: sessionModel.count > 0; z: 15
         width: sessionRow.implicitWidth + 16; height: sessionRow.implicitHeight + 16
         hoverEnabled: true
-        onClicked: if (sessionModel.count > 1) {
-            root.currentSessionIndex = (root.currentSessionIndex + 1) % sessionModel.count
-        }
         cursorShape: sessionModel.count > 1 ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onClicked: if (sessionModel.count > 1) root.sessionPopupOpen = !root.sessionPopupOpen
 
         Rectangle {
             anchors.fill: parent; radius: 8
-            color: parent.pressed ? Qt.rgba(1,1,1,0.15) : parent.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent"
+            color: root.sessionPopupOpen ? Qt.rgba(1,1,1,0.15)
+                 : parent.pressed ? Qt.rgba(1,1,1,0.15)
+                 : parent.containsMouse ? Qt.rgba(1,1,1,0.08) : "transparent"
             Behavior on color { ColorAnimation { duration: 150 } }
         }
 
         Row {
             id: sessionRow
-            anchors.centerIn: parent
-            spacing: 6
+            anchors.centerIn: parent; spacing: 6
             MSymbol { text: "desktop_windows"; iconSize: 18; iconColor: root.colOnSurface; symFont: root.symFont() }
             Text {
-                text: root.currentSessionName
-                font.pixelSize: 14; color: root.colOnSurface
+                text: root.currentSessionName; font.pixelSize: 14; color: root.colOnSurface
                 anchors.verticalCenter: parent.verticalCenter
             }
             MSymbol {
-                text: "expand_more"; iconSize: 16; iconColor: root.colOnSurfaceVariant
-                symFont: root.symFont()
+                text: root.sessionPopupOpen ? "expand_less" : "expand_more"
+                iconSize: 16; iconColor: root.colOnSurfaceVariant; symFont: root.symFont()
                 visible: sessionModel.count > 1
                 anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
+    // Session popup
+    Rectangle {
+        id: sessionPopup
+        anchors.bottom: sessionTrigger.top; anchors.bottomMargin: 8
+        anchors.left: sessionTrigger.left
+        width: Math.max(220, sessionPopupCol.implicitWidth + 24)
+        height: sessionPopupCol.implicitHeight + 16
+        radius: 12; z: 16
+        color: Qt.rgba(root.colSurfaceContainer.r, root.colSurfaceContainer.g, root.colSurfaceContainer.b, 0.95)
+        border.color: Qt.rgba(root.colOnSurface.r, root.colOnSurface.g, root.colOnSurface.b, 0.12)
+        border.width: 1
+        visible: opacity > 0
+        opacity: root.sessionPopupOpen ? 1 : 0
+        scale: root.sessionPopupOpen ? 1 : 0.9
+        transformOrigin: Item.BottomLeft
+        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        Behavior on scale  { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+        layer.enabled: true
+        layer.effect: DropShadow {
+            horizontalOffset: 0; verticalOffset: -4; radius: 16; samples: 33
+            color: Qt.rgba(0, 0, 0, 0.4)
+        }
+
+        Column {
+            id: sessionPopupCol
+            anchors.centerIn: parent; spacing: 2
+
+            Repeater {
+                model: sessionModel.count
+                delegate: MouseArea {
+                    id: sessDel
+                    width: sessionPopup.width - 16; height: 38
+                    hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+
+                    readonly property bool isCurrent: index === root.currentSessionIndex
+                    readonly property string sessName: {
+                        var v = sessionModel.data(sessionModel.index(index, 0), root._sessNameRole)
+                        return (v !== undefined && v !== null && String(v).length > 0) ? String(v) : ("Session " + index)
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent; radius: 8
+                        color: sessDel.isCurrent ? Qt.rgba(root.colPrimary.r, root.colPrimary.g, root.colPrimary.b, 0.2)
+                             : sessDel.pressed ? Qt.rgba(root.colOnSurface.r, root.colOnSurface.g, root.colOnSurface.b, 0.15)
+                             : sessDel.containsMouse ? Qt.rgba(root.colOnSurface.r, root.colOnSurface.g, root.colOnSurface.b, 0.08)
+                             : "transparent"
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                    }
+
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter; anchors.left: parent.left
+                        anchors.leftMargin: 10; spacing: 8
+
+                        MSymbol {
+                            text: "check"; iconSize: 18
+                            iconColor: root.colPrimary; symFont: root.symFont()
+                            visible: sessDel.isCurrent
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        // Spacer when no check icon, to keep text aligned
+                        Item {
+                            width: 18; height: 18
+                            visible: !sessDel.isCurrent
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: sessDel.sessName; font.pixelSize: 14
+                            font.weight: sessDel.isCurrent ? Font.Medium : Font.Normal
+                            color: sessDel.isCurrent ? root.colPrimary : root.colOnSurface
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    onClicked: {
+                        root.currentSessionIndex = index
+                        root.sessionPopupOpen = false
+                    }
+                }
             }
         }
     }
@@ -528,6 +620,7 @@ MouseArea {
 
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
+            if (root.sessionPopupOpen) { root.sessionPopupOpen = false; return }
             if (root.keyboardOpen) { root.keyboardOpen = false; return }
             if (passwordBox.text.length > 0) passwordBox.text = ""
             else if (root.showLoginView) root.currentView = "clock"
