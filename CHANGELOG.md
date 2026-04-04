@@ -5,6 +5,23 @@ All notable changes to iNiR will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.17.2] - 2026-04-04
+
+### Added
+- **Arch dependency tracker meta-package**: New `inir-deps` package registered during setup so pacman orphan cleanup does not remove iNiR runtime dependencies.
+- **Post-install extras flow**: `./setup extras` now exposes optional installs for iNiR-Walls and ii-pixel-sddm after initial setup.
+
+### Changed
+- **Arch install hardening**: Dependency install flow now handles known Noctalia package conflicts before iNiR package resolution.
+- **Path model normalization**: Runtime/services/settings/welcome surfaces now consume centralized XDG-derived paths from `Directories.qml` instead of scattered literals.
+- **Setup UX flow**: Fresh install keeps optional content opt-in (SDDM/iNiR-Walls), update path handling and theme actions were hardened, and the setup TUI received the new Ink visual refactor.
+
+### Fixed
+- **Wallpaper status resolution**: Setup now reads `theme-meta.json` via `.wallpaper` with `.source_path` fallback so active wallpaper no longer shows as `none` when metadata uses source-path shape.
+- **iNiR-Walls feedback**: Extras flow now shows visible clone/download progress and no longer suppresses user-facing install logs.
+- **Theming target wiring**: Spicetify target config key corrected to `appearance.wallpaperTheming.enableSpicetify`, and terminal theming applies with safer terminal ancestry detection.
+- **Runtime interaction edge cases**: Cheatsheet key handling and wallpaper coverflow monitor targeting/cleanup were corrected for more reliable focus and close behavior.
+
 ## [2.17.1] - 2026-04-02
 
 ### Added
