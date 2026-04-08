@@ -655,6 +655,7 @@
         "scrimDim": 100
     },
     "overview": {
+        "activeScreenOnly": false,
         "backgroundBlurEnable": true,
         "backgroundBlurRadius": 50,
         "backgroundDim": 40,

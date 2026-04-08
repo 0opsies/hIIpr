@@ -932,7 +932,6 @@ Singleton {
                 property int scrimDim: 35
                 property int topMargin: 0
                 property int bottomMargin: 0
-                property bool centerLauncher: false
                 property bool respectBar: true
                 property real maxPanelWidthRatio: 1.0
                 property int workspaceSpacing: 5
@@ -948,6 +947,7 @@ Singleton {
                 property bool keepOverviewOpenOnWindowClick: true
                 property bool closeAfterWindowMove: true
                 property bool showPreviews: false // Show window thumbnails in overview
+                property bool activeScreenOnly: false // Show only on active screen (multi-monitor)
                 property JsonObject dashboard: JsonObject {
                     property bool enable: false
                     property bool showToggles: true
