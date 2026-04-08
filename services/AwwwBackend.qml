@@ -88,6 +88,11 @@ Singleton {
         syncDebounce.restart()
     }
 
+    function forceSync(): void {
+        lastSyncSignature = ""
+        syncDebounce.restart()
+    }
+
     function isAwwwNativeTransitionType(type): bool {
         return ["none", "simple", "fade", "left", "right", "top", "bottom", "wipe", "wave", "grow", "center", "any", "outer", "random"].includes(String(type ?? ""))
     }

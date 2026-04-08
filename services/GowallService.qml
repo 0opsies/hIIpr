@@ -48,6 +48,12 @@ Singleton {
     readonly property string _outputDir: FileUtils.trimFileProtocol(`${Directories.pictures}/Wallpapers/Gowall`)
     readonly property string _generatedThemePath: Directories.generatedMaterialThemePath
 
+    // Shim dir with no-op kitty/xdg-open to prevent gowall from opening image viewers
+    readonly property string _shimDir: "/tmp/inir-gowall-shim"
+    readonly property var _gowallEnv: ({
+        PATH: `${_shimDir}:${Quickshell.env("PATH") ?? "/usr/bin:/usr/local/bin"}`
+    })
+
     // --- Helpers ---
     function _norm(path: string): string {
         return FileUtils.trimFileProtocol(String(path ?? ""))
@@ -353,8 +359,18 @@ Singleton {
         onStarted: { root.available = false; root.error = "" }
         onExited: (exitCode) => {
             root.available = exitCode === 0
-            if (root.available) root.refreshThemes()
+            if (root.available) {
+                root.refreshThemes()
+                shimSetupProc.running = true
+            }
         }
+    }
+
+    // Create no-op shims so gowall can't spawn kitty/xdg-open after processing
+    Process {
+        id: shimSetupProc
+        command: ["/usr/bin/bash", "-c",
+            `d=${root._shimDir} && mkdir -p "$d" && printf '#!/bin/sh\\nexit 0\\n' > "$d/kitty" && printf '#!/bin/sh\\nexit 0\\n' > "$d/xdg-open" && chmod +x "$d/kitty" "$d/xdg-open"`]
     }
 
     Process {
@@ -409,6 +425,7 @@ Singleton {
 
     Process {
         id: operationProc
+        environment: root._gowallEnv
         onExited: (exitCode) => {
             if (exitCode !== 0) { root.error = "gowall operation failed"; return }
             root._currentPreviewPath = root._previewPathFor(root._pendingFormat)
@@ -426,11 +443,13 @@ Singleton {
                 Wallpapers.select(_destPath, Appearance.m3colors.darkmode, "", root._applyTarget)
             else
                 Wallpapers.apply(_destPath, Appearance.m3colors.darkmode)
+            AwwwBackend.forceSync()
         }
     }
 
     Process {
         id: extractProc
+        environment: root._gowallEnv
         command: ["/usr/bin/gowall", "extract", "/dev/null"]
         stdout: SplitParser {
             onRead: data => {
@@ -447,6 +466,7 @@ Singleton {
 
     Process {
         id: compressProc
+        environment: root._gowallEnv
         property string _outputPath: ""
         stdout: SplitParser {
             onRead: data => {
