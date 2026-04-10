@@ -127,7 +127,7 @@
             "enableChrome": true,
             "enableSpicetify": false,
             "enableAdwSteam": false,
-            "enablePearDesktop": false,
+            "enablePearDesktop": true,
             "colorStrength": 1.0,
             "useBackdropForColors": false,
             "colorsOnlyMode": false,

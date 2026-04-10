@@ -17,13 +17,13 @@ ContentPage {
             "iiBar", "iiBackground", "iiBackdrop", "iiCheatsheet", "iiControlPanel", "iiDock", "iiLock", 
             "iiMediaControls", "iiNotificationPopup", "iiOnScreenDisplay", "iiOnScreenKeyboard", 
             "iiOverlay", "iiOverview", "iiPolkit", "iiRegionSelector", "iiScreenCorners", 
-            "iiSessionScreen", "iiSidebarLeft", "iiSidebarRight", "iiVerticalBar", 
-            "iiWallpaperSelector", "iiAltSwitcher", "iiClipboard"
+            "iiSessionScreen", "iiSidebarLeft", "iiSidebarRight", "iiTilingOverlay", "iiVerticalBar", 
+            "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard", "iiShellUpdate"
         ],
         "waffle": [
             "wBar", "wBackground", "wBackdrop", "wStartMenu", "wActionCenter", "wNotificationCenter", "wNotificationPopup", "wOnScreenDisplay", "wWidgets", "wTaskView", "wLock", "wPolkit", "wSessionScreen",
-            "iiCheatsheet", "iiControlPanel", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
-            "iiRegionSelector", "iiScreenCorners", "iiTilingOverlay", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
+            "iiCheatsheet", "iiOnScreenKeyboard", "iiOverlay", "iiOverview",
+            "iiRegionSelector", "iiScreenCorners", "iiWallpaperSelector", "iiCoverflowSelector", "iiClipboard"
         ]
     })
 
@@ -578,8 +578,8 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "tab"
                 text: Translation.tr("Alt-Tab Switcher")
-                checked: modulesPage.isPanelEnabled("iiAltSwitcher")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiAltSwitcher", checked)
+                checked: true
+                enabled: false
                 StyledToolTip { text: Translation.tr("Window switcher popup") }
             }
 
@@ -619,8 +619,8 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "center_focus_strong"
                 text: Translation.tr("Crosshair")
-                checked: modulesPage.isPanelEnabled("iiCrosshair")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiCrosshair", checked)
+                checked: true
+                enabled: false
                 StyledToolTip { text: Translation.tr("Gaming crosshair overlay for games without built-in crosshair") }
             }
         }
@@ -798,8 +798,8 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "tab"
                 text: Translation.tr("Alt-Tab Switcher")
-                checked: modulesPage.isPanelEnabled("iiAltSwitcher")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiAltSwitcher", checked)
+                checked: true
+                enabled: false
                 StyledToolTip { text: Translation.tr("Window switcher popup") }
             }
 
@@ -814,8 +814,8 @@ ContentPage {
             SettingsSwitch {
                 buttonIcon: "center_focus_strong"
                 text: Translation.tr("Crosshair")
-                checked: modulesPage.isPanelEnabled("iiCrosshair")
-                onCheckedChanged: modulesPage.setPanelEnabled("iiCrosshair", checked)
+                checked: true
+                enabled: false
                 StyledToolTip { text: Translation.tr("Gaming crosshair overlay") }
             }
         }

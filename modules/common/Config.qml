@@ -312,7 +312,7 @@ Singleton {
                     property bool enableChrome: true
                     property bool enableSpicetify: false
                     property bool enableAdwSteam: false
-                    property bool enablePearDesktop: false
+                    property bool enablePearDesktop: true
                     property bool enableOpenCode: false
                     property real colorStrength: 1.0
                     property JsonObject vscodeEditors: JsonObject {

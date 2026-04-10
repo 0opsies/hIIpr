@@ -217,9 +217,9 @@ DockButton {
     function launchFromDesktopEntry(): bool {
         // Intentar siempre vía gtk-launch y, si falla, ejecutar appId directamente
         var id = appToplevel.originalAppId ?? appToplevel.appId;
-        // Caso especial: YouTube Music (pear)
+        // Caso especial: YouTube Music
         if (id === "com.github.th_ch.youtube_music") {
-            id = "pear-desktop";
+            id = "youtube-music";
         }
         // Caso especial: Spotify launcher
         if (id === "spotify" || id === "spotify-launcher") {

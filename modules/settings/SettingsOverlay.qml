@@ -1268,10 +1268,16 @@ Scope {
                                         source: overlayPages[index].component
                                         visible: index === overlayCurrentPage && status === Loader.Ready
                                         opacity: visible ? 1 : 0
+                                        scale: visible ? 1 : 0.985
+                                        transformOrigin: Item.Center
 
                                         Behavior on opacity {
                                             enabled: Appearance.animationsEnabled
                                             animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Appearance.animation.elementMoveFast.type; easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve }
+                                        }
+                                        Behavior on scale {
+                                            enabled: Appearance.animationsEnabled
+                                            animation: NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Easing.BezierSpline; easing.bezierCurve: Appearance.animationCurves.emphasizedDecel }
                                         }
                                     }
                                 }
