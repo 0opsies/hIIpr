@@ -15,36 +15,15 @@ Button {
     id: root
 
     required property var toplevel
-    property bool closing: false
     property real previewWidthConstraint: 200
     property real previewHeightConstraint: 110
     padding: 6
     Layout.fillHeight: true
-    opacity: closing ? 0 : 1
-    scale: closing ? 0.92 : 1
-    Layout.preferredWidth: closing ? 0 : implicitWidth
-    Layout.maximumWidth: closing ? 0 : implicitWidth
-    Layout.preferredHeight: implicitHeight
-    Layout.maximumHeight: implicitHeight
 
-    Behavior on opacity {
-        NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
-    }
-
-    Behavior on scale {
-        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
-    }
-
-    Behavior on Layout.preferredWidth {
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
-    }
-
-    Behavior on Layout.maximumWidth {
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
-    }
-
-    // Emitted BEFORE focus IPC so the popup can close instantly (no flash)
+    // Emitted BEFORE focus IPC so the popup can close instantly
     signal windowActivated()
+    // Emitted when the user closes a window from the preview
+    signal windowCloseClicked()
 
     onClicked: {
         root.windowActivated()
@@ -83,7 +62,6 @@ Button {
             IconImage {
                 id: appIcon
                 Layout.alignment: Qt.AlignVCenter
-                // Use desktop entry icon (same resolution as dock button) instead of weak guessIcon
                 source: {
                     const appId = root.toplevel?.appId ?? "";
                     const de = AppSearch.lookupDesktopEntry(appId);
@@ -127,8 +105,8 @@ Button {
                 colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.6)
                 
                 onClicked: {
-                    root.closing = true
-                    closeWindowTimer.restart()
+                    root.windowCloseClicked()
+                    root.toplevel?.close()
                 }
 
                 contentItem: MaterialSymbol {
@@ -150,7 +128,7 @@ Button {
             implicitWidth: 140
             implicitHeight: 90
 
-            // Prefer niriWindowId for Niri compositor — WindowPreviewService captures by niri IDs
+            // Prefer niriWindowId for Niri compositor
             readonly property int windowId: CompositorService.isNiri
                 ? (root.toplevel?.niriWindowId ?? root.toplevel?.id ?? 0)
                 : (root.toplevel?.id ?? 0)
@@ -192,19 +170,16 @@ Button {
                 }
             }
 
-            // Fallback icon - shown until preview loads (uses same resolution as header icon)
+            // Fallback icon (snap visibility like waffle — no opacity fade)
             IconImage {
                 id: fallbackIcon
                 anchors.centerIn: parent
                 source: appIcon.source
                 implicitSize: Math.min(48, parent.width * 0.4)
-                opacity: windowPreview.status === Image.Ready ? 0 : 0.7
+                visible: windowPreview.status !== Image.Ready
+                opacity: 0.7
                 mipmap: true
                 smooth: true
-
-                Behavior on opacity {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
-                }
             }
 
             // Preview image
@@ -255,11 +230,5 @@ Button {
                 })
             }
         }
-    }
-
-    Timer {
-        id: closeWindowTimer
-        interval: 150
-        onTriggered: root.toplevel?.close()
     }
 }
