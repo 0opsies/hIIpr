@@ -512,6 +512,55 @@ apply_qt_runtime_env() {
             XDG_DATA_DIRS="/var/lib/flatpak/exports/share:$XDG_DATA_DIRS"
         true
     fi
+
+    # Import missing graphical-session variables from the systemd user manager.
+    #
+    # When inir.service races compositor startup (graphical-session.target),
+    # the process environment is minimal (PATH=/usr/local/bin:/usr/bin, no
+    # XDG_SESSION_TYPE, no DISPLAY, no XCURSOR_*, etc.).  By the time
+    # wait_for_wayland_socket() returns, the compositor (niri/hyprland) has
+    # already run its import-environment step, so the systemd user manager's
+    # environment is complete.  We pull any still-missing critical vars into
+    # this process so that Quickshell's INITIAL_ENVIRONMENT snapshot — which
+    # is frozen at QS startup and inherited by every app launched via
+    # DesktopEntry.execute() — contains them.
+    #
+    # Without this:
+    #   • Chromium/Brave/Electron apps don't see XDG_SESSION_TYPE=wayland and
+    #     fall back to X11; with no DISPLAY set they fail silently.
+    #   • Apps in ~/.local/bin, flatpak exports, nvm, pnpm, etc. are not found
+    #     because PATH is the bare systemd minimum.
+    #   • Cursor theme/size are absent, so spawned apps render the default cursor.
+    local _qs_sys_env
+    _qs_sys_env="$(systemctl --user show-environment 2>/dev/null)" || true
+    if [[ -n "$_qs_sys_env" ]]; then
+        local _qs_var _qs_val
+        for _qs_var in XDG_SESSION_TYPE XDG_SESSION_DESKTOP DESKTOP_SESSION \
+                       DISPLAY XCURSOR_THEME XCURSOR_SIZE \
+                       LANG LC_ALL XDG_MENU_PREFIX; do
+            if [[ -z "${!_qs_var:-}" ]]; then
+                _qs_val="$(grep "^${_qs_var}=" <<< "$_qs_sys_env" | head -1 | cut -d= -f2- || true)"
+                [[ -n "$_qs_val" ]] && export "${_qs_var}=${_qs_val}"
+            fi
+        done
+        # Use the manager's rich PATH (set by compositor + PAM login) which
+        # includes user dirs (~/.local/bin, flatpak exports, nvm, pnpm, etc.)
+        # absent from the minimal systemd unit PATH.  All apps launched via
+        # DesktopEntry.execute() inherit Quickshell's INITIAL_ENVIRONMENT, so
+        # they need the full PATH to locate binaries outside /usr/bin.
+        local _qs_sys_path
+        _qs_sys_path="$(grep '^PATH=' <<< "$_qs_sys_env" | head -1 | cut -d= -f2- || true)"
+        if [[ -n "$_qs_sys_path" && "$_qs_sys_path" != "$PATH" ]]; then
+            local _qs_merged="$_qs_sys_path"
+            for _qs_p in /usr/local/bin /usr/bin; do
+                case ":${_qs_merged}:" in
+                    *":${_qs_p}:"*) ;;
+                    *) _qs_merged="${_qs_merged}:${_qs_p}" ;;
+                esac
+            done
+            export PATH="$_qs_merged"
+        fi
+    fi
 }
 
 apply_qt_logging_rules() {
@@ -701,6 +750,13 @@ ensure_systemd_graphical_env() {
     # XDG_CURRENT_DESKTOP — used by portal and theme detection
     if ! grep -q '^XDG_CURRENT_DESKTOP=' <<< "$sys_env" 2>/dev/null; then
         vars_to_import+=("XDG_CURRENT_DESKTOP=niri")
+    fi
+
+    # XDG_SESSION_TYPE — required by Chromium/Electron/Wine to select the Wayland
+    # backend.  Without it they fall back to X11; if DISPLAY is also absent (common
+    # in systemd-launched shells) they fail to open a window entirely.
+    if ! grep -q '^XDG_SESSION_TYPE=' <<< "$sys_env" 2>/dev/null; then
+        vars_to_import+=("XDG_SESSION_TYPE=wayland")
     fi
 
     if [[ ${#vars_to_import[@]} -gt 0 ]]; then
