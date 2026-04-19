@@ -1296,7 +1296,8 @@
     "iiWallpaperSelector",
     "iiCoverflowSelector",
     "iiClipboard",
-    "iiShellUpdate"
+    "iiShellUpdate",
+    "iiRecordingOsd"
   ],
   "knownPanels": [],
   "powerProfiles": {
