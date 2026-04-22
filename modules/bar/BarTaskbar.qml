@@ -117,6 +117,9 @@ Item {
             for (const appId of pinnedApps) {
                 const lowerAppId = appId.toLowerCase();
                 const runningEntry = runningAppsMap.get(lowerAppId);
+                // Skip pinned apps with no desktop entry and no running windows
+                if (!runningEntry && !AppSearch.lookupDesktopEntry(appId))
+                    continue;
                 values.push({
                     uniqueId: "app-" + lowerAppId,
                     appId: lowerAppId,
@@ -156,6 +159,9 @@ Item {
             for (const appId of pinnedApps) {
                 const lowerAppId = appId.toLowerCase();
                 if (!runningAppsMap.has(lowerAppId)) {
+                    // Skip pinned apps with no desktop entry
+                    if (!AppSearch.lookupDesktopEntry(appId))
+                        continue;
                     values.push({
                         uniqueId: "app-" + lowerAppId,
                         appId: lowerAppId,
