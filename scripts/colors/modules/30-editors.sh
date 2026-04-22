@@ -13,6 +13,7 @@ VSCODE_THEMEGEN_BIN="$STATE_DIR/user/generated/bin/inir-vscode-themegen"
 OPENCODE_THEMEGEN_BIN="$STATE_DIR/user/generated/bin/inir-opencode-themegen"
 NEOVIM_CONFIG_DIR="$XDG_CONFIG_HOME/nvim"
 NEOVIM_PLUGIN_DIR="$NEOVIM_CONFIG_DIR/lua/plugins"
+NEOVIM_THEME_FILE="$NEOVIM_PLUGIN_DIR/neovim.lua"
 NEOVIM_THEMEGEN="$SCRIPT_DIR/neovim_themegen.sh"
 
 ensure_vscode_themegen() {
@@ -42,7 +43,7 @@ generate_neovim_spec() {
 strip_neovim_spec() {
   [[ -f "$NEOVIM_THEME_FILE" ]] || return 0
 
-  if grep -Fq '"bjarneo/aether.nvim"' "$NEOVIM_THEME_FILE" || grep -Fq 'name = "inir-neovim"' "$NEOVIM_THEME_FILE"; then
+  if grep -Fq '"yukazakiri/inir.nvim"' "$NEOVIM_THEME_FILE" || grep -Fq '"bjarneo/aether.nvim"' "$NEOVIM_THEME_FILE" || grep -Fq 'name = "inir-neovim"' "$NEOVIM_THEME_FILE"; then
     rm -f "$NEOVIM_THEME_FILE"
   fi
 }
