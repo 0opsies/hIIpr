@@ -810,6 +810,10 @@ check_quickshell_loads() {
         return 0
     fi
 
+    # Resolve symlinks — Quickshell stores the real path internally, so
+    # `qs -p <symlink>` won't match the running instance.
+    target="$(readlink -f "$target")"
+
     # Skip if no graphical session
     if [[ -z "$WAYLAND_DISPLAY" && -z "$DISPLAY" && -z "$NIRI_SOCKET" ]]; then
         doctor_pass "Quickshell (skipped - no display)"
